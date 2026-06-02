@@ -3,20 +3,19 @@
  * Provides reusable validation chains and a generic error formatter.
  */
 
-import { body, validationResult } from 'express-validator';
+import { body, validationResult } from "express-validator";
 
 /**
  * Validation rules for the login endpoint.
  * @type {import('express-validator').ValidationChain[]}
  */
 export const validateLogin = [
-  body('email')
-    .isEmail()
-    .withMessage('Please provide a valid email address')
-    .normalizeEmail(),
-  body('password')
+  body("username")
     .notEmpty()
-    .withMessage('Password is required'),
+    .withMessage("Username is required")
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage("Username can only contain letters, numbers, and underscores"),
+  body("password").notEmpty().withMessage("Password is required"),
 ];
 
 /**
@@ -32,7 +31,7 @@ export const handleValidationErrors = (req, res, next) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({
       success: false,
-      message: 'Validation failed',
+      message: "Validation failed",
       errors: errors.array().map((err) => ({
         field: err.path,
         message: err.msg,

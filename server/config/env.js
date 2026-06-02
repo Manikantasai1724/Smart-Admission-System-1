@@ -28,6 +28,7 @@ const config = Object.freeze({
   JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-key-change-in-production-abc123xyz',
   JWT_EXPIRY: process.env.JWT_EXPIRY || '24h',
   NODE_ENV: process.env.NODE_ENV || 'development',
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
 });
 
 export default config;

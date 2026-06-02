@@ -35,12 +35,12 @@ const studentSchema = new mongoose.Schema(
       required: [true, "Department is required"],
       trim: true,
     },
-    studentPhone: {
+    phone: {
       type: String,
+      required: [true, "Phone number is required"],
       trim: true,
-      default: "",
     },
-    parentPhone: {
+    parentName: {
       type: String,
       trim: true,
       default: "",
@@ -51,19 +51,7 @@ const studentSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
-    category: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-    gender: {
-      type: String,
-      enum: {
-        values: ["Male", "Female", "Other"],
-        message: "{VALUE} is not a valid gender",
-      },
-    },
-    region: {
+    address: {
       type: String,
       trim: true,
       default: "",

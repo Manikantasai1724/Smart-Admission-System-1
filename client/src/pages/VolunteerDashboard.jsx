@@ -9,6 +9,7 @@ import { useSocket } from '../context/SocketContext';
 import { useToast } from '../context/ToastContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { getStudents, updateStudentStatus } from '../services/studentService';
+import { getStats } from '../services/dashboardService';
 import { getGreeting, calculateCompletionPercentage, timeAgo } from '../utils/helpers';
 import { STEP_LABELS } from '../utils/constants';
 
@@ -39,10 +40,14 @@ function VolunteerDashboard() {
       const recentRes = await getStudents({ limit: 10, sort: '-updatedAt' });
       setRecentUpdates(recentRes.data.students || recentRes.data.data || []);
 
-      // Calculate stats
-      const completedCount = students.filter(s => calculateCompletionPercentage(s) === 100).length;
-      const pendingCount = students.filter(s => calculateCompletionPercentage(s) < 100).length;
-      setStats({ pendingToday: pendingCount, completedToday: completedCount });
+      // Fetch true global stats from dashboard API
+      const statsRes = await getStats();
+      const globalStats = statsRes.data.stats || statsRes.data;
+      
+      setStats({ 
+        pendingToday: globalStats.pendingStudents, 
+        completedToday: globalStats.completedStudents 
+      });
     } catch (error) {
       console.error('Error fetching students:', error);
       addToast('error', 'Failed to load student data');

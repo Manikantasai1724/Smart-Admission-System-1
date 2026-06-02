@@ -45,7 +45,7 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200/50 dark:border-primary-400/10">
+            <tr className="border-b border-gray-200/50 dark:border-primary-400/10 whitespace-nowrap">
               <th className="text-left px-4 py-3.5">
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">S.No</span>
               </th>
@@ -92,15 +92,15 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                   key={student._id || student.id || index}
                   className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors group"
                 >
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className="text-sm text-gray-500 dark:text-gray-400">{index + 1}</span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">
                       {student.hallTicket || student.hallTicketNumber || '—'}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                         {student.name?.charAt(0)?.toUpperCase() || '?'}
@@ -153,26 +153,31 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                       <StatusBadge status={student.formFilled ? 'completed' : 'pending'} />
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-16 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-700 ${
-                            completion >= 100
-                              ? 'bg-gradient-to-r from-emerald-400 to-emerald-500'
-                              : completion >= 50
-                              ? 'bg-gradient-to-r from-blue-400 to-blue-500'
-                              : completion > 0
-                              ? 'bg-gradient-to-r from-amber-400 to-amber-500'
-                              : 'bg-gray-300'
-                          }`}
-                          style={{ width: `${completion}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{completion}%</span>
-                    </div>
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
+                    {canEdit ? (
+                      <button
+                        onClick={() => {
+                          const isComplete = completion >= 100;
+                          const newStatus = !isComplete;
+                          onStatusChange?.(student._id || student.id, {
+                            selfReported: newStatus,
+                            documentsSubmitted: newStatus,
+                            formFilled: newStatus
+                          });
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          completion >= 100
+                            ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40'
+                            : 'bg-primary-50 text-primary-600 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/40'
+                        }`}
+                      >
+                        {completion >= 100 ? 'Mark as Unread' : 'Mark as Read'}
+                      </button>
+                    ) : (
+                      <StatusBadge status={completion >= 100 ? 'completed' : 'pending'} />
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <button
                       onClick={() => navigate(`/students/${student._id || student.id}`)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors opacity-0 group-hover:opacity-100"

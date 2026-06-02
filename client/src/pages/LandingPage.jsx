@@ -2,8 +2,21 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Users, UserCheck, ArrowRight } from "lucide-react";
 
+import { useAuth } from "../context/AuthContext";
+
 function LandingPage() {
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === "hod") {
+        navigate("/hod/dashboard", { replace: true });
+      } else {
+        navigate("/volunteer/dashboard", { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   return (
     <div className="login-bg min-h-screen flex items-center justify-center p-4 relative overflow-hidden">

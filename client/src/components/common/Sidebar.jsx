@@ -4,10 +4,11 @@ import {
   LayoutDashboard,
   Users,
   Upload,
-  FileText,
   ChevronLeft,
   ChevronRight,
   X,
+  History,
+  ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -15,7 +16,7 @@ const HOD_LINKS = [
   { to: '/hod/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/students', label: 'Students', icon: Users },
   { to: '/upload', label: 'Upload', icon: Upload },
-  { to: '/logs', label: 'Audit Logs', icon: FileText },
+  { to: '/hod/audit-logs', label: 'Audit Logs', icon: History },
 ];
 
 const VOLUNTEER_LINKS = [
@@ -23,9 +24,16 @@ const VOLUNTEER_LINKS = [
   { to: '/students', label: 'Students', icon: Users },
 ];
 
+const ADMIN_LINKS = [
+  { to: '/admin/dashboard', label: 'User Management', icon: ShieldAlert },
+];
+
 function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
   const { user } = useAuth();
-  const links = user?.role === 'hod' ? HOD_LINKS : VOLUNTEER_LINKS;
+  
+  let links = VOLUNTEER_LINKS;
+  if (user?.role?.toLowerCase() === 'hod') links = HOD_LINKS;
+  if (user?.role?.toLowerCase() === 'admin') links = ADMIN_LINKS;
 
   const sidebarContent = (
     <div className="flex flex-col h-full">

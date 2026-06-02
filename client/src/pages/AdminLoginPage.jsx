@@ -6,14 +6,14 @@ import {
   Lock,
   Eye,
   EyeOff,
-  GraduationCap,
+  ShieldCheck,
   Loader,
   ArrowLeft,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 
-function HodLoginPage() {
+function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -32,11 +32,9 @@ function HodLoginPage() {
   // Redirect if already authenticated as correct role, otherwise logout
   React.useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role === "hod") {
-        navigate("/hod/dashboard", { replace: true });
+      if (user.role.toLowerCase() === "admin") {
+        navigate("/admin/dashboard", { replace: true });
       } else {
-        // They are logged in as volunteer but trying to access HOD login
-        // Force logout so they can login as HOD
         localStorage.removeItem("token");
         window.location.reload();
       }
@@ -48,7 +46,7 @@ function HodLoginPage() {
     setLoginError("");
     try {
       await login(data.username, data.password);
-      addToast("success", "Welcome back! Login successful.");
+      addToast("success", "Welcome back, Admin!");
     } catch (error) {
       const message =
         error.response?.data?.message || "Invalid username or password";
@@ -61,36 +59,31 @@ function HodLoginPage() {
 
   return (
     <div className="login-bg min-h-screen flex items-center justify-center p-4 relative">
-      {/* Floating Orbs */}
       <div className="login-orb" />
       <div className="login-orb" />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Back Button */}
         <button
           onClick={() => navigate("/")}
           className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors mb-8 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-sm font-medium">Back to Role Selection</span>
+          <span className="text-sm font-medium">Back to Home</span>
         </button>
 
-        {/* Card */}
         <div className="glass-card backdrop-blur-xl bg-white/40 dark:bg-primary-950/40 p-8 rounded-2xl shadow-xl border border-white/20">
-          {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg shadow-blue-500/30">
-              <span>H</span>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg shadow-purple-500/30">
+              <ShieldCheck className="w-8 h-8" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              HOD Login
+              Admin Login
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Head of Department Portal
+              User Management Portal
             </p>
           </div>
 
-          {/* Error Alert */}
           {loginError && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50">
               <p className="text-sm font-medium text-red-700 dark:text-red-400">
@@ -99,9 +92,7 @@ function HodLoginPage() {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Username */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Username
@@ -110,13 +101,9 @@ function HodLoginPage() {
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="hod_username"
+                  placeholder="admin"
                   {...register("username", {
                     required: "Username is required",
-                    minLength: {
-                      value: 3,
-                      message: "Username must be at least 3 characters",
-                    },
                   })}
                   className="glass-input w-full pl-12 pr-4 py-3"
                 />
@@ -128,7 +115,6 @@ function HodLoginPage() {
               )}
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Password
@@ -137,13 +123,9 @@ function HodLoginPage() {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="admin@123"
                   {...register("password", {
                     required: "Password is required",
-                    minLength: {
-                      value: 4,
-                      message: "Password must be at least 4 characters",
-                    },
                   })}
                   className="glass-input w-full pl-12 pr-12 py-3"
                 />
@@ -166,46 +148,28 @@ function HodLoginPage() {
               )}
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full glass-button py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed mt-8"
+              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed mt-8"
             >
               {isLoading ? (
                 <>
                   <Loader className="w-5 h-5 animate-spin" />
-                  Signing In...
+                  Verifying...
                 </>
               ) : (
                 <>
-                  <GraduationCap className="w-5 h-5" />
-                  Sign In as HOD
+                  <ShieldCheck className="w-5 h-5" />
+                  Enter System
                 </>
               )}
             </button>
           </form>
-
-          {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-gray-200/50 dark:border-primary-400/10">
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-              Smart Admission Tracking & Verification System
-            </p>
-          </div>
-        </div>
-
-        {/* Info Box */}
-        <div className="mt-6 p-4 glass-card rounded-xl border border-blue-200/50 dark:border-blue-400/20 bg-blue-50/30 dark:bg-blue-900/20">
-          <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
-            <span className="font-semibold text-blue-600 dark:text-blue-400">
-              HOD Features:
-            </span>{" "}
-            Upload students, view statistics, manage audit logs
-          </p>
         </div>
       </div>
     </div>
   );
 }
 
-export default HodLoginPage;
+export default AdminLoginPage;

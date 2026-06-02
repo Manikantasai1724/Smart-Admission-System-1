@@ -167,56 +167,41 @@ function StudentDetailPage() {
               />
               <InfoRow
                 icon={Phone}
-                label="Student Phone"
-                value={student.studentPhone || student.phone}
-              />
-              <InfoRow
-                icon={Phone}
-                label="Parent Phone"
-                value={student.parentPhone}
+                label="Phone"
+                value={student.phone}
               />
               <InfoRow icon={Mail} label="Email" value={student.email} />
-              {student.category && (
-                <InfoRow
-                  icon={User}
-                  label="Category"
-                  value={student.category}
-                />
-              )}
-              {student.gender && (
-                <InfoRow icon={User} label="Gender" value={student.gender} />
-              )}
-              {student.region && (
-                <InfoRow
-                  icon={Building}
-                  label="Region"
-                  value={student.region}
-                />
-              )}
+              <InfoRow
+                icon={User}
+                label="Parent Name"
+                value={student.parentName}
+              />
+              <InfoRow
+                icon={Building}
+                label="Address"
+                value={student.address}
+              />
             </div>
 
-            {/* Completion */}
+            {/* Completion Status */}
             <div className="mt-6 pt-4 border-t border-gray-200/50 dark:border-primary-400/10">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Completion
+                  Status
                 </span>
-                <span className="text-sm font-bold text-gray-900 dark:text-white">
-                  {completion}%
+                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                  completion >= 100 
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                    : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                }`}>
+                  {completion >= 100 ? 'Completed' : 'Pending'}
                 </span>
               </div>
-              <div className="w-full h-2.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    completion >= 100
-                      ? "bg-gradient-to-r from-emerald-400 to-emerald-500"
-                      : completion >= 50
-                        ? "bg-gradient-to-r from-blue-400 to-blue-500"
-                        : "bg-gradient-to-r from-amber-400 to-amber-500"
-                  }`}
-                  style={{ width: `${completion}%` }}
-                />
-              </div>
+              {completion >= 100 && student.completedAt && (
+                <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-right">
+                  Marked as read on: <span className="font-medium text-gray-700 dark:text-gray-300">{formatDate(student.completedAt)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

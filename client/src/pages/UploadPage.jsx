@@ -11,6 +11,7 @@ function UploadPage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [results, setResults] = useState(null);
 
   const handleFileSelect = (file) => {
@@ -45,12 +46,16 @@ function UploadPage() {
     }
 
     setUploading(true);
+    setUploadProgress(0);
     setResults(null);
 
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      const res = await uploadStudents(formData);
+      const res = await uploadStudents(formData, (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        setUploadProgress(percentCompleted);
+      });
       setResults(res.data);
       addToast('success', `Successfully uploaded ${res.data.inserted || res.data.count || 0} students`);
     } catch (error) {
@@ -63,6 +68,7 @@ function UploadPage() {
       });
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -139,10 +145,15 @@ function UploadPage() {
                   className="glass-button flex-1 flex items-center justify-center gap-2"
                 >
                   {uploading ? (
-                    <>
-                      <Loader className="w-5 h-5 animate-spin" />
-                      Uploading...
-                    </>
+                    <div className="flex flex-col items-center gap-2 w-full px-4">
+                      <div className="flex items-center gap-2">
+                         <Loader className="w-5 h-5 animate-spin" />
+                         <span>Uploading {uploadProgress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                        <div className="bg-primary-600 h-1.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
+                      </div>
+                    </div>
                   ) : (
                     <>
                       <Upload className="w-5 h-5" />
@@ -173,18 +184,27 @@ function UploadPage() {
                       {results.error ? 'Upload Failed' : 'Upload Successful'}
                     </h4>
                     {!results.error && (
-                      <div className="mt-3 grid grid-cols-3 gap-4">
-                        <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
-                          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{results.inserted || results.count || 0}</p>
-                          <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Inserted</p>
-                        </div>
-                        <div className="text-center p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20">
-                          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{results.skipped || 0}</p>
-                          <p className="text-xs text-amber-600/70 dark:text-amber-400/70">Skipped</p>
-                        </div>
-                        <div className="text-center p-3 rounded-xl bg-red-50 dark:bg-red-900/20">
-                          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{results.errors?.length || results.failed || 0}</p>
-                          <p className="text-xs text-red-600/70 dark:text-red-400/70">Errors</p>
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                          Total Records Parsed: <span className="font-bold">{results.totalRecords || 0}</span>
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
+                            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{results.inserted || results.count || 0}</p>
+                            <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Imported</p>
+                          </div>
+                          <div className="text-center p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20">
+                            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{results.skipped || 0}</p>
+                            <p className="text-xs text-amber-600/70 dark:text-amber-400/70">Duplicates Skipped</p>
+                          </div>
+                          <div className="text-center p-3 rounded-xl bg-gray-100 dark:bg-gray-800">
+                            <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{results.invalidRows || 0}</p>
+                            <p className="text-xs text-gray-600/70 dark:text-gray-400/70">Invalid Rows</p>
+                          </div>
+                          <div className="text-center p-3 rounded-xl bg-red-50 dark:bg-red-900/20">
+                            <p className="text-2xl font-bold text-red-600 dark:text-red-400">{results.errors?.length || results.failed || 0}</p>
+                            <p className="text-xs text-red-600/70 dark:text-red-400/70">Errors</p>
+                          </div>
                         </div>
                       </div>
                     )}

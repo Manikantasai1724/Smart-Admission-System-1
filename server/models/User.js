@@ -11,7 +11,8 @@ const SALT_ROUNDS = 10;
 /**
  * @typedef {Object} IUser
  * @property {string}  name       - Full name of the user.
- * @property {string}  email      - Unique login email (stored lowercase).
+ * @property {string}  username   - Unique login username (stored lowercase).
+ * @property {string}  email      - Email address (optional).
  * @property {string}  password   - Hashed password.
  * @property {string}  role       - Either 'HOD' or 'Volunteer'.
  * @property {string}  department - Department the user belongs to.
@@ -24,13 +25,23 @@ const userSchema = new mongoose.Schema(
       required: [true, "Name is required"],
       trim: true,
     },
-    email: {
+    username: {
       type: String,
-      required: [true, "Email is required"],
+      required: [true, "Username is required"],
       unique: true,
       lowercase: true,
       trim: true,
+      match: [
+        /^[a-zA-Z0-9_]+$/,
+        "Username can only contain letters, numbers, and underscores",
+      ],
+    },
+    email: {
+      type: String,
+      lowercase: true,
+      trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
+      sparse: true,
     },
     password: {
       type: String,
@@ -41,7 +52,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: {
-        values: ["HOD", "Volunteer"],
+        values: ["Admin", "HOD", "Volunteer"],
         message: "{VALUE} is not a valid role",
       },
       required: [true, "Role is required"],
@@ -67,9 +78,6 @@ const userSchema = new mongoose.Schema(
     },
   },
 );
-
-// ── Indexes ──────────────────────────────────────────────────────────────────
-// email: unique constraint already defined at field level
 
 // ── Pre-save: hash password ──────────────────────────────────────────────────
 userSchema.pre("save", async function preSaveHashPassword(next) {

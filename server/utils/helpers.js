@@ -6,16 +6,7 @@
  * List of all recognised departments.
  * @type {string[]}
  */
-export const DEPARTMENTS = [
-  'CSE',
-  'ECE',
-  'EEE',
-  'MECH',
-  'CIVIL',
-  'IT',
-  'AIDS',
-  'AIML',
-];
+export const DEPARTMENTS = ["CSE", "AIML", "CIC"];
 
 /**
  * Trim whitespace and escape basic HTML entities to prevent stored XSS.
@@ -23,14 +14,14 @@ export const DEPARTMENTS = [
  * @returns {string} Sanitised string.
  */
 export const sanitizeInput = (str) => {
-  if (typeof str !== 'string') return '';
+  if (typeof str !== "string") return "";
   return str
     .trim()
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
 };
 
 /**
@@ -45,12 +36,12 @@ export const sanitizeInput = (str) => {
  *   // { $or: [ { name: /Ravi/i }, { hallTicketNumber: /Ravi/i }, ... ] }
  */
 export const buildSearchQuery = (query) => {
-  if (!query || typeof query !== 'string' || !query.trim()) {
+  if (!query || typeof query !== "string" || !query.trim()) {
     return {};
   }
 
-  const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(escaped, 'i');
+  const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(escaped, "i");
 
   const conditions = [
     { name: regex },

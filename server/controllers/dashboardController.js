@@ -40,9 +40,11 @@ export const getStats = async (req, res, next) => {
       }),
       Student.countDocuments({
         ...baseFilter,
-        selfReported: false,
-        documentsSubmitted: false,
-        formFilled: false,
+        $or: [
+          { selfReported: false },
+          { documentsSubmitted: false },
+          { formFilled: false },
+        ]
       }),
       Student.countDocuments({ ...baseFilter, selfReported: true }),
       Student.countDocuments({ ...baseFilter, documentsSubmitted: true }),
@@ -57,7 +59,7 @@ export const getStats = async (req, res, next) => {
       })(),
     ]);
 
-    const inProgressStudents = totalStudents - completedStudents - pendingStudents;
+    const inProgressStudents = 0; // Deprecated, keeping for UI backward compatibility if needed
 
     // ── Recent activity ───────────────────────────────────────────
     const recentActivity = await AuditLog.find({})
@@ -117,7 +119,7 @@ export const getDepartmentProgress = async (req, res, next) => {
             $sum: {
               $cond: [
                 {
-                  $and: [
+                  $or: [
                     { $eq: ['$selfReported', false] },
                     { $eq: ['$documentsSubmitted', false] },
                     { $eq: ['$formFilled', false] },

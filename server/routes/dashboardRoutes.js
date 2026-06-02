@@ -11,14 +11,14 @@ const router = Router();
 
 /**
  * GET /api/dashboard/stats
- * Overall admission statistics (HOD only).
+ * Overall admission statistics.
  */
-router.get('/stats', auth, authorize('HOD'), getStats);
+router.get('/stats', auth, authorize('HOD', 'Volunteer'), getStats);
 
 /**
  * GET /api/dashboard/department-progress
- * Per-department completion breakdown (HOD only).
+ * Per-department completion breakdown.
  */
-router.get('/department-progress', auth, authorize('HOD'), getDepartmentProgress);
+router.get('/department-progress', auth, authorize('HOD', 'Volunteer'), getDepartmentProgress);
 
 export default router;

@@ -1,202 +1,194 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FileText, Calendar, Download, Filter } from 'lucide-react';
-import DashboardLayout from '../components/common/DashboardLayout';
-import AuditLogTable from '../components/audit/AuditLogTable';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import { useToast } from '../context/ToastContext';
-import { getLogs } from '../services/logService';
-import { exportToExcel, exportToPDF } from '../utils/helpers';
+import React, { useState, useEffect } from "react";
+import { History, Loader, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import DashboardLayout from "../components/common/DashboardLayout";
+import { getLogs } from "../services/logService";
+import { useToast } from "../context/ToastContext";
+
+const renderAction = (log) => {
+  if (log.action === "STUDENT_DELETED") {
+    return <span className="text-red-500 font-medium">Deleted Student</span>;
+  }
+  
+  if (log.action === "STATUS_UPDATE") {
+    const changes = [];
+    if (log.oldValue && log.newValue) {
+      if (!log.oldValue.selfReported && log.newValue.selfReported) changes.push("Self Reported");
+      if (!log.oldValue.documentsSubmitted && log.newValue.documentsSubmitted) changes.push("Documents Submitted");
+      if (!log.oldValue.formFilled && log.newValue.formFilled) changes.push("Form Filled");
+      
+      if (log.oldValue.selfReported && !log.newValue.selfReported) changes.push("Unmarked Self Reported");
+      if (log.oldValue.documentsSubmitted && !log.newValue.documentsSubmitted) changes.push("Unmarked Documents Submitted");
+      if (log.oldValue.formFilled && !log.newValue.formFilled) changes.push("Unmarked Form Filled");
+    }
+    
+    if (changes.length > 0) {
+      return (
+        <div className="text-sm">
+          Status: <span className="font-semibold text-primary-600 dark:text-primary-400">{changes.join(", ")}</span>
+        </div>
+      );
+    }
+    return <div className="text-sm">Updated Status / Remarks</div>;
+  }
+  
+  return <div className="text-sm font-medium">{log.action}</div>;
+};
 
 function AuditLogsPage() {
-  const { addToast } = useToast();
-
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0,
-  });
-  const [filters, setFilters] = useState({
-    user: '',
-    startDate: '',
-    endDate: '',
-    action: '',
-  });
-  const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState("");
+  const { addToast } = useToast();
 
-  const fetchLogs = useCallback(async () => {
+  const fetchLogs = async (currentPage, searchQuery) => {
     try {
       setLoading(true);
-      const params = {
-        page: pagination.page,
-        limit: pagination.limit,
-      };
-      if (filters.user) params.user = filters.user;
-      if (filters.startDate) params.startDate = filters.startDate;
-      if (filters.endDate) params.endDate = filters.endDate;
-      if (filters.action) params.action = filters.action;
-
-      const res = await getLogs(params);
-      const data = res.data;
-      setLogs(data.logs || data.data || []);
-      if (data.pagination) {
-        setPagination(prev => ({ ...prev, ...data.pagination }));
-      } else if (data.total !== undefined) {
-        setPagination(prev => ({
-          ...prev,
-          total: data.total,
-          totalPages: Math.ceil(data.total / prev.limit),
-        }));
-      }
+      const res = await getLogs({ page: currentPage, limit: 15, search: searchQuery });
+      setLogs(res.data.logs);
+      setTotalPages(res.data.pagination.totalPages);
     } catch (error) {
-      console.error('Error fetching logs:', error);
-      addToast('error', 'Failed to load audit logs');
+      addToast("error", "Failed to fetch audit logs");
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, filters, addToast]);
+  };
 
   useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+    const delayDebounceFn = setTimeout(() => {
+      setPage(1);
+      fetchLogs(1, search);
+    }, 500);
 
-  const handlePageChange = (newPage) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
+
+  useEffect(() => {
+    fetchLogs(page, search);
+  }, [page]);
+
+  const handlePrevPage = () => {
+    if (page > 1) setPage(p => p - 1);
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const handleExport = () => {
-    if (logs.length === 0) {
-      addToast('warning', 'No data to export');
-      return;
-    }
-    const data = logs.map(log => ({
-      Timestamp: log.createdAt || log.timestamp,
-      User: log.user?.name || log.userName || 'System',
-      Action: log.action || '',
-      Student: log.student?.name || log.studentName || '',
-      Field: log.field || '',
-      'Old Value': log.oldValue !== undefined ? String(log.oldValue) : '',
-      'New Value': log.newValue !== undefined ? String(log.newValue) : '',
-    }));
-    exportToExcel(data, 'audit-logs');
-    addToast('success', 'Audit logs exported successfully');
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(p => p + 1);
   };
 
   return (
     <DashboardLayout>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary-100 dark:bg-primary-900/40">
-              <FileText className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-            </div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <History className="w-8 h-8 text-primary-500" />
             Audit Logs
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Track all changes and actions in the system
+            Track all status changes made by volunteers
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all duration-200 ${
-              showFilters
-                ? 'bg-primary-50 border-primary-200 text-primary-600 dark:bg-primary-900/20 dark:border-primary-400/20 dark:text-primary-400'
-                : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-            }`}
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-          </button>
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Export
-          </button>
+        
+        {/* Search */}
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by student name or HTNO..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="glass-input w-full pl-9 pr-4 py-2"
+          />
         </div>
       </div>
 
-      {/* Filters Panel */}
-      {showFilters && (
-        <div className="glass-card p-4 mb-6 animate-slide-down">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                User
-              </label>
-              <input
-                type="text"
-                value={filters.user}
-                onChange={(e) => handleFilterChange('user', e.target.value)}
-                placeholder="Filter by user..."
-                className="glass-input w-full text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                Action Type
-              </label>
-              <select
-                value={filters.action}
-                onChange={(e) => handleFilterChange('action', e.target.value)}
-                className="glass-input w-full text-sm"
+      <div className="glass-card rounded-2xl overflow-hidden border border-white/20 dark:border-primary-400/10 flex flex-col min-h-[500px]">
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400">
+            <thead className="text-xs uppercase bg-gray-50/50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 border-b border-gray-200/50 dark:border-gray-700/50 whitespace-nowrap">
+              <tr>
+                <th className="px-6 py-4 font-semibold">Date & Time</th>
+                <th className="px-6 py-4 font-semibold">Student</th>
+                <th className="px-6 py-4 font-semibold">Action</th>
+                <th className="px-6 py-4 font-semibold">Updated By</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="px-6 py-12 text-center">
+                    <Loader className="w-6 h-6 animate-spin text-primary-500 mx-auto" />
+                  </td>
+                </tr>
+              ) : logs.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
+                    No activity found
+                  </td>
+                </tr>
+              ) : (
+                logs.map((log) => (
+                  <tr key={log._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {new Date(log.timestamp).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        {log.studentId?.name || "Unknown Student"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {log.studentId?.hallTicketNumber} • {log.studentId?.department}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {renderAction(log)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900 dark:text-gray-200">
+                        {log.updatedBy?.name || "Unknown"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {log.updatedBy?.role}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination */}
+        {!loading && logs.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-gray-50/30 dark:bg-gray-800/30">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Page {page} of {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={page === 1}
+                className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <option value="">All Actions</option>
-                <option value="create">Create</option>
-                <option value="update">Update</option>
-                <option value="delete">Delete</option>
-                <option value="upload">Upload</option>
-                <option value="login">Login</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                <Calendar className="w-3 h-3 inline mr-1" />
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={filters.startDate}
-                onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                className="glass-input w-full text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
-                <Calendar className="w-3 h-3 inline mr-1" />
-                End Date
-              </label>
-              <input
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                className="glass-input w-full text-sm"
-              />
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={handleNextPage}
+                disabled={page === totalPages}
+                className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-white dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Content */}
-      {loading ? (
-        <LoadingSpinner message="Loading audit logs..." />
-      ) : (
-        <AuditLogTable
-          logs={logs}
-          pagination={pagination}
-          onPageChange={handlePageChange}
-        />
-      )}
+        )}
+      </div>
     </DashboardLayout>
   );
 }

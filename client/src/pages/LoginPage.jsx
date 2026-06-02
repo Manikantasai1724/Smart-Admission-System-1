@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { Mail, Lock, Eye, EyeOff, GraduationCap, Loader } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { User, Lock, Eye, EyeOff, GraduationCap, Loader } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
+  const [loginError, setLoginError] = useState("");
   const { login, isAuthenticated, user } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
@@ -18,26 +18,30 @@ function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    defaultValues: { email: '', password: '' },
+    defaultValues: { username: "", password: "" },
   });
 
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated && user) {
-      navigate(user.role === 'hod' ? '/hod/dashboard' : '/volunteer/dashboard', { replace: true });
+      navigate(
+        user.role === "hod" ? "/hod/dashboard" : "/volunteer/dashboard",
+        { replace: true },
+      );
     }
   }, [isAuthenticated, user, navigate]);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
-    setLoginError('');
+    setLoginError("");
     try {
-      await login(data.email, data.password);
-      addToast('success', 'Welcome back! Login successful.');
+      await login(data.username, data.password);
+      addToast("success", "Welcome back! Login successful.");
     } catch (error) {
-      const message = error.response?.data?.message || 'Invalid email or password';
+      const message =
+        error.response?.data?.message || "Invalid username or password";
       setLoginError(message);
-      addToast('error', message);
+      addToast("error", message);
     } finally {
       setIsLoading(false);
     }
@@ -52,10 +56,22 @@ function LoginPage() {
       <div className="login-orb" />
 
       {/* Floating geometric shapes */}
-      <div className="absolute top-20 left-20 w-20 h-20 border border-white/10 rounded-2xl rotate-12 animate-float hidden lg:block" style={{ animationDelay: '0s' }} />
-      <div className="absolute bottom-32 right-24 w-16 h-16 border border-white/10 rounded-full animate-float hidden lg:block" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-1/3 right-1/4 w-12 h-12 border border-white/10 rounded-lg rotate-45 animate-float hidden lg:block" style={{ animationDelay: '4s' }} />
-      <div className="absolute bottom-1/4 left-1/3 w-8 h-8 bg-white/5 rounded-full animate-float hidden lg:block" style={{ animationDelay: '1s' }} />
+      <div
+        className="absolute top-20 left-20 w-20 h-20 border border-white/10 rounded-2xl rotate-12 animate-float hidden lg:block"
+        style={{ animationDelay: "0s" }}
+      />
+      <div
+        className="absolute bottom-32 right-24 w-16 h-16 border border-white/10 rounded-full animate-float hidden lg:block"
+        style={{ animationDelay: "2s" }}
+      />
+      <div
+        className="absolute top-1/3 right-1/4 w-12 h-12 border border-white/10 rounded-lg rotate-45 animate-float hidden lg:block"
+        style={{ animationDelay: "4s" }}
+      />
+      <div
+        className="absolute bottom-1/4 left-1/3 w-8 h-8 bg-white/5 rounded-full animate-float hidden lg:block"
+        style={{ animationDelay: "1s" }}
+      />
 
       {/* Login Card */}
       <div className="relative z-10 w-full max-w-md animate-scale-in">
@@ -68,7 +84,9 @@ function LoginPage() {
             <h1 className="text-2xl font-bold text-white mb-1">
               Admit<span className="text-primary-300">Track</span>
             </h1>
-            <p className="text-sm text-white/60">EAPCET Admission Tracking System</p>
+            <p className="text-sm text-white/60">
+              EAPCET Admission Tracking System
+            </p>
           </div>
 
           {/* Error Message */}
@@ -80,28 +98,30 @@ function LoginPage() {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Email Field */}
+            {/* Username Field */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider">
-                Email Address
+                Username
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/40" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/40" />
                 <input
-                  type="email"
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address',
+                  type="text"
+                  {...register("username", {
+                    required: "Username is required",
+                    minLength: {
+                      value: 3,
+                      message: "Username must be at least 3 characters",
                     },
                   })}
-                  placeholder="Enter your email"
+                  placeholder="Enter your username"
                   className="w-full bg-white/10 border border-white/15 rounded-xl px-4 py-3.5 pl-12 text-white placeholder-white/30 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-400/20 transition-all duration-300 backdrop-blur-sm"
                 />
               </div>
-              {errors.email && (
-                <p className="text-xs text-red-400 mt-1">{errors.email.message}</p>
+              {errors.username && (
+                <p className="text-xs text-red-400 mt-1">
+                  {errors.username.message}
+                </p>
               )}
             </div>
 
@@ -113,12 +133,12 @@ function LoginPage() {
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-white/40" />
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  {...register('password', {
-                    required: 'Password is required',
+                  type={showPassword ? "text" : "password"}
+                  {...register("password", {
+                    required: "Password is required",
                     minLength: {
                       value: 4,
-                      message: 'Password must be at least 4 characters',
+                      message: "Password must be at least 4 characters",
                     },
                   })}
                   placeholder="Enter your password"
@@ -129,11 +149,17 @@ function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4.5 h-4.5" />
+                  ) : (
+                    <Eye className="w-4.5 h-4.5" />
+                  )}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-xs text-red-400 mt-1">{errors.password.message}</p>
+                <p className="text-xs text-red-400 mt-1">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
@@ -160,7 +186,7 @@ function LoginPage() {
                   Signing in...
                 </>
               ) : (
-                'Sign In'
+                "Sign In"
               )}
             </button>
           </form>

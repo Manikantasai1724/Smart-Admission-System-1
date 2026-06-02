@@ -3,7 +3,6 @@ import { Users, CheckCircle, Clock, AlertTriangle, Download, FileSpreadsheet, Fi
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import DashboardLayout from '../components/common/DashboardLayout';
 import StatCard from '../components/dashboard/StatCard';
-import DepartmentChart from '../components/dashboard/DepartmentChart';
 import TrendChart from '../components/dashboard/TrendChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
 import ProgressRing from '../components/dashboard/ProgressRing';
@@ -47,8 +46,12 @@ function HodDashboard() {
         getDepartmentProgress(),
       ]);
       setStats(statsRes.data.stats || statsRes.data);
-      setDepartmentData(deptRes.data.departments || deptRes.data || []);
-      if (statsRes.data.recentActivities) {
+      const allDepts = deptRes.data.departments || deptRes.data || [];
+      const validDepts = allDepts.filter(d => DEPARTMENTS.includes(d.department || d.name || ''));
+      setDepartmentData(validDepts);
+      if (statsRes.data.recentActivity) {
+        setActivities(statsRes.data.recentActivity);
+      } else if (statsRes.data.recentActivities) {
         setActivities(statsRes.data.recentActivities);
       }
     } catch (error) {
@@ -67,9 +70,8 @@ function HodDashboard() {
   useEffect(() => {
     if (!socket) return;
 
-    const handleStudentUpdated = (data) => {
+    const handleStudentUpdated = () => {
       fetchDashboardData();
-      setActivities(prev => [data, ...prev].slice(0, 20));
     };
 
     const handleNewActivity = (activity) => {
@@ -86,14 +88,12 @@ function HodDashboard() {
   }, [socket, fetchDashboardData]);
 
   const totalStudents = stats?.total || stats?.totalStudents || 0;
-  const completed = stats?.completed || 0;
-  const inProgress = stats?.inProgress || 0;
-  const pending = stats?.pending || totalStudents - completed - inProgress;
+  const completed = stats?.completed || stats?.completedStudents || 0;
+  const pending = stats?.pending || stats?.pendingStudents || totalStudents - completed;
   const completionRate = totalStudents > 0 ? Math.round((completed / totalStudents) * 100) : 0;
 
   const pieData = [
     { name: 'Completed', value: completed },
-    { name: 'In Progress', value: inProgress },
     { name: 'Pending', value: pending > 0 ? pending : 0 },
   ].filter(d => d.value > 0);
 
@@ -200,13 +200,7 @@ function HodDashboard() {
               color="success"
               delay={100}
             />
-            <StatCard
-              title="In Progress"
-              value={inProgress}
-              icon={Clock}
-              color="blue"
-              delay={200}
-            />
+
             <StatCard
               title="Pending"
               value={pending > 0 ? pending : 0}
@@ -219,42 +213,29 @@ function HodDashboard() {
           </div>
 
           {/* Charts Row 1 */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-3">
-              <DepartmentChart data={filteredDeptData} />
-            </div>
-            <div className="lg:col-span-2">
-              <div className="glass-card p-6 h-full">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Overall Completion
-                </h3>
-                <div className="flex flex-col items-center justify-center h-[calc(100%-3rem)]">
-                  <ProgressRing percentage={completionRate} size={160} strokeWidth={12} />
-                  <div className="mt-6 space-y-2 w-full">
-                    {pieData.map((entry, index) => (
-                      <div key={entry.name} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PIE_COLORS[index] }} />
-                          <span className="text-gray-600 dark:text-gray-400">{entry.name}</span>
-                        </div>
-                        <span className="font-semibold text-gray-800 dark:text-gray-200">{entry.value}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="glass-card p-6 h-full">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Overall Completion
+              </h3>
+              <div className="flex flex-col items-center justify-center h-[calc(100%-3rem)]">
+                <ProgressRing percentage={completionRate} size={160} strokeWidth={12} />
+                <div className="mt-6 space-y-2 w-full">
+                  {pieData.map((entry, index) => (
+                    <div key={entry.name} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PIE_COLORS[index] }} />
+                        <span className="text-gray-600 dark:text-gray-400">{entry.name}</span>
                       </div>
-                    ))}
-                  </div>
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">{entry.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Charts Row 2 */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-3">
-              <TrendChart data={stats?.trendData || []} />
-            </div>
-            <div className="lg:col-span-2">
-              <ActivityFeed activities={activities} />
-            </div>
-          </div>
+
         </div>
       )}
     </DashboardLayout>

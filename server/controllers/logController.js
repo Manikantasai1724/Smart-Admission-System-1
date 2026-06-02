@@ -17,8 +17,9 @@ export const getLogs = async (req, res, next) => {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const skip = (page - 1) * limit;
-
-    const filter = {};
+    const filter = {
+      role: { $regex: /^volunteer$/i }
+    };
 
     // Filter by user who made the change
     if (req.query.updatedBy) {

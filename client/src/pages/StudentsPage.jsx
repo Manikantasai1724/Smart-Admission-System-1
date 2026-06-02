@@ -72,7 +72,7 @@ function StudentsPage() {
     const handleUpdate = (updated) => {
       setStudents(prev =>
         prev.map(s =>
-          (s._id === updated._id || s.id === updated.id) ? { ...s, ...updated } : s
+          (s._id === updated._id || (s.id && s.id === updated.id)) ? { ...s, ...updated } : s
         )
       );
     };
@@ -90,13 +90,20 @@ function StudentsPage() {
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  const handleStatusChange = async (studentId, field, value) => {
+  const handleStatusChange = async (studentId, fieldOrObj, value) => {
     try {
-      await updateStudentStatus(studentId, { [field]: value });
-      addToast('success', `${STEP_LABELS[field]} ${value ? 'completed' : 'reverted'}`);
+      const updates = typeof fieldOrObj === 'string' ? { [fieldOrObj]: value } : fieldOrObj;
+      await updateStudentStatus(studentId, updates);
+      
+      const message = typeof fieldOrObj === 'string' 
+        ? `${STEP_LABELS[fieldOrObj]} ${value ? 'completed' : 'reverted'}`
+        : 'Student status updated';
+        
+      addToast('success', message);
+      
       setStudents(prev =>
         prev.map(s =>
-          (s._id === studentId || s.id === studentId) ? { ...s, [field]: value } : s
+          (s._id === studentId || s.id === studentId) ? { ...s, ...updates } : s
         )
       );
     } catch (error) {

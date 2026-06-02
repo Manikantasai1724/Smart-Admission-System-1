@@ -8,9 +8,10 @@ export const getStudentById = (id) => {
   return api.get(`/students/${id}`);
 };
 
-export const uploadStudents = (formData) => {
+export const uploadStudents = (formData, onUploadProgress) => {
   return api.post('/students/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress,
   });
 };
 

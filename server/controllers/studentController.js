@@ -6,6 +6,7 @@ import fs from "fs";
 import Student from "../models/Student.js";
 import AuditLog from "../models/AuditLog.js";
 import { parseFile } from "../services/fileParser.js";
+import { bulkInsertStudents } from "../services/studentService.js";
 import {
   emitStudentUpdate,
   emitDashboardRefresh,
@@ -34,12 +35,7 @@ export const getStudents = async (req, res, next) => {
 
     // Department filter
     if (req.query.department) {
-      filter.department = req.query.department;
-    }
-
-    // Optional: Volunteers see only their own department
-    if (req.user.role === "Volunteer" && req.query.filterByDept !== "false") {
-      filter.department = req.user.department;
+      filter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
 
     // Status filter
@@ -51,9 +47,11 @@ export const getStudents = async (req, res, next) => {
           filter.formFilled = true;
           break;
         case "pending":
-          filter.selfReported = false;
-          filter.documentsSubmitted = false;
-          filter.formFilled = false;
+          filter.$or = [
+            { selfReported: false },
+            { documentsSubmitted: false },
+            { formFilled: false }
+          ];
           break;
         case "in-progress":
           filter.$expr = {
@@ -118,8 +116,9 @@ export const getStudents = async (req, res, next) => {
     }
 
     // Text / regex search
-    if (req.query.query) {
-      const searchFilter = buildSearchQuery(req.query.query);
+    const searchQuery = req.query.search || req.query.query;
+    if (searchQuery) {
+      const searchFilter = buildSearchQuery(searchQuery);
       if (searchFilter.$or) {
         filter.$or = searchFilter.$or;
       }
@@ -225,67 +224,13 @@ export const uploadStudents = async (req, res, next) => {
       });
     }
 
-    // ── De-duplicate against existing records ──────────────────────
-    const hallTickets = parsedStudents.map((s) =>
-      s.hallTicketNumber.toUpperCase(),
+    const { inserted, skipped, errors, invalidRows } = await bulkInsertStudents(
+      parsedStudents,
+      req.user.id,
+      req.user.role
     );
-    const existing = await Student.find({
-      hallTicketNumber: { $in: hallTickets },
-    })
-      .select("hallTicketNumber")
-      .lean();
 
-    const existingSet = new Set(existing.map((e) => e.hallTicketNumber));
-
-    const toInsert = [];
-    const skipped = [];
-    const errors = [];
-
-    for (const record of parsedStudents) {
-      const htUpper = record.hallTicketNumber.toUpperCase();
-      if (existingSet.has(htUpper)) {
-        skipped.push(htUpper);
-        continue;
-      }
-
-      toInsert.push({
-        ...record,
-        hallTicketNumber: htUpper,
-        uploadedBy: req.user.id,
-      });
-    }
-
-    let insertedDocs = [];
-    if (toInsert.length > 0) {
-      try {
-        insertedDocs = await Student.insertMany(toInsert, { ordered: false });
-      } catch (bulkError) {
-        // Some may have inserted; capture the ones that failed
-        if (bulkError.insertedDocs) {
-          insertedDocs = bulkError.insertedDocs;
-        }
-        if (bulkError.writeErrors) {
-          bulkError.writeErrors.forEach((we) => {
-            errors.push({
-              hallTicketNumber: toInsert[we.index]?.hallTicketNumber,
-              message: we.errmsg || we.message,
-            });
-          });
-        }
-      }
-    }
-
-    // Create audit logs for inserted students
-    if (insertedDocs.length > 0) {
-      const auditEntries = insertedDocs.map((doc) => ({
-        studentId: doc._id,
-        updatedBy: req.user.id,
-        role: req.user.role,
-        action: "STUDENT_CREATED",
-        newValue: { hallTicketNumber: doc.hallTicketNumber, name: doc.name },
-      }));
-      await AuditLog.insertMany(auditEntries);
-
+    if (inserted > 0) {
       // Real-time notification
       emitDashboardRefresh();
     }
@@ -293,8 +238,10 @@ export const uploadStudents = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: "File processed successfully.",
-      inserted: insertedDocs.length,
-      skipped: skipped.length,
+      totalRecords: parsedStudents.length,
+      inserted,
+      skipped,
+      invalidRows,
       errors,
     });
   } catch (error) {

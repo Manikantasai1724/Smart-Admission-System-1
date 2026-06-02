@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Clock } from 'lucide-react';
-import ProgressRing from '../dashboard/ProgressRing';
+import StatusBadge from '../common/StatusBadge';
 import StatusToggle from './StatusToggle';
 import { calculateCompletionPercentage, formatDate } from '../../utils/helpers';
 import { STEP_LABELS, ADMISSION_STEPS } from '../../utils/constants';
@@ -39,9 +39,15 @@ function StudentCard({ student, onStatusChange, showActions = true }) {
         </p>
       )}
 
-      {/* Progress Ring and Steps */}
+      {/* Status and Steps */}
       <div className="flex items-center gap-5 mb-4">
-        <ProgressRing percentage={completion} size={72} strokeWidth={6} />
+        <div className="flex flex-col items-center justify-center w-[72px] h-[72px] rounded-full bg-gray-50 dark:bg-primary-900/10 border-2 border-dashed border-gray-200 dark:border-primary-400/20">
+          {completion >= 100 ? (
+            <span className="text-xs font-bold text-emerald-500 text-center leading-tight">Done</span>
+          ) : (
+            <span className="text-xs font-bold text-amber-500 text-center leading-tight">Pending</span>
+          )}
+        </div>
         <div className="flex-1 space-y-2.5">
           {ADMISSION_STEPS.map((step) => (
             <div key={step} className="flex items-center justify-between">

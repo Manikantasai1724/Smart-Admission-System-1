@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import {
-  Mail,
+  User,
   Lock,
   Eye,
   EyeOff,
@@ -26,16 +26,19 @@ function VolunteerLoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    defaultValues: { email: "", password: "" },
+    defaultValues: { username: "", password: "" },
   });
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated as correct role, otherwise logout
   React.useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role === "hod") {
-        navigate("/hod/dashboard", { replace: true });
-      } else {
+      if (user.role === "volunteer") {
         navigate("/volunteer/dashboard", { replace: true });
+      } else {
+        // They are logged in as HOD but trying to access volunteer login
+        // Force logout so they can login as volunteer
+        localStorage.removeItem("token");
+        window.location.reload();
       }
     }
   }, [isAuthenticated, user, navigate]);
@@ -44,11 +47,11 @@ function VolunteerLoginPage() {
     setIsLoading(true);
     setLoginError("");
     try {
-      await login(data.email, data.password);
+      await login(data.username, data.password);
       addToast("success", "Welcome back! Login successful.");
     } catch (error) {
       const message =
-        error.response?.data?.message || "Invalid email or password";
+        error.response?.data?.message || "Invalid username or password";
       setLoginError(message);
       addToast("error", message);
     } finally {
@@ -98,29 +101,29 @@ function VolunteerLoginPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Email */}
+            {/* Username */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Email Address
+                Username
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  type="email"
-                  placeholder="volunteer@college.edu"
-                  {...register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address",
+                  type="text"
+                  placeholder="volunteer_username"
+                  {...register("username", {
+                    required: "Username is required",
+                    minLength: {
+                      value: 3,
+                      message: "Username must be at least 3 characters",
                     },
                   })}
                   className="glass-input w-full pl-12 pr-4 py-3"
                 />
               </div>
-              {errors.email && (
+              {errors.username && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                  {errors.email.message}
+                  {errors.username.message}
                 </p>
               )}
             </div>

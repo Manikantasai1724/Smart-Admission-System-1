@@ -10,10 +10,12 @@ import HodLoginPage from "./pages/HodLoginPage";
 import VolunteerLoginPage from "./pages/VolunteerLoginPage";
 import HodDashboard from "./pages/HodDashboard";
 import VolunteerDashboard from "./pages/VolunteerDashboard";
+import AdminLoginPage from "./pages/AdminLoginPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import AuditLogsPage from "./pages/AuditLogsPage";
 import StudentsPage from "./pages/StudentsPage";
 import StudentDetailPage from "./pages/StudentDetailPage";
 import UploadPage from "./pages/UploadPage";
-import AuditLogsPage from "./pages/AuditLogsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
@@ -27,11 +29,28 @@ function App() {
               <Route path="/login" element={<Navigate to="/" replace />} />
               <Route path="/login/hod" element={<HodLoginPage />} />
               <Route path="/login/volunteer" element={<VolunteerLoginPage />} />
+              <Route path="/admin" element={<AdminLoginPage />} />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/hod/dashboard"
                 element={
                   <ProtectedRoute allowedRoles={["hod"]}>
                     <HodDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/hod/audit-logs"
+                element={
+                  <ProtectedRoute allowedRoles={["hod"]}>
+                    <AuditLogsPage />
                   </ProtectedRoute>
                 }
               />
@@ -64,14 +83,6 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["hod"]}>
                     <UploadPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/logs"
-                element={
-                  <ProtectedRoute allowedRoles={["hod"]}>
-                    <AuditLogsPage />
                   </ProtectedRoute>
                 }
               />

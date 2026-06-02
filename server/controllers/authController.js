@@ -3,13 +3,13 @@
  * Handles user login (JWT issuance) and the "get current user" endpoint.
  */
 
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import config from '../config/env.js';
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import config from "../config/env.js";
 
 /**
  * POST /api/auth/login
- * Authenticate a user with email + password and return a JWT.
+ * Authenticate a user with username + password and return a JWT.
  *
  * @param {import('express').Request}  req
  * @param {import('express').Response} res
@@ -17,15 +17,17 @@ import config from '../config/env.js';
  */
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // Fetch user WITH the password field (select: false in schema)
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({
+      username: username.toLowerCase(),
+    }).select("+password");
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password.',
+        message: "Invalid username or password.",
       });
     }
 
@@ -34,14 +36,14 @@ export const login = async (req, res, next) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password.',
+        message: "Invalid username or password.",
       });
     }
 
     // ── Build JWT payload ────────────────────────────────────────────
     const payload = {
       id: user._id,
-      email: user.email,
+      username: user.username,
       role: user.role,
       department: user.department,
       name: user.name,
@@ -53,11 +55,12 @@ export const login = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       token,
       user: {
         id: user._id,
         name: user.name,
+        username: user.username,
         email: user.email,
         role: user.role,
         department: user.department,
@@ -83,7 +86,7 @@ export const getMe = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found.',
+        message: "User not found.",
       });
     }
 
@@ -92,6 +95,7 @@ export const getMe = async (req, res, next) => {
       user: {
         id: user._id,
         name: user.name,
+        username: user.username,
         email: user.email,
         role: user.role,
         department: user.department,

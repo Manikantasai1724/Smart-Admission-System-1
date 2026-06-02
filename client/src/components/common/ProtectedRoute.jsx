@@ -1,7 +1,7 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import LoadingSpinner from './LoadingSpinner';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import LoadingSpinner from "./LoadingSpinner";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, user, loading } = useAuth();
@@ -14,12 +14,18 @@ function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    // Redirect to appropriate dashboard based on role
-    if (user?.role === 'hod') {
-      return <Navigate to="/hod/dashboard" replace />;
+  if (allowedRoles) {
+    const userRole = user?.role?.toLowerCase() || "";
+    if (!allowedRoles.includes(userRole)) {
+      // Redirect to appropriate dashboard based on role
+      if (userRole === "admin") {
+        return <Navigate to="/admin/dashboard" replace />;
+      }
+      if (userRole === "hod") {
+        return <Navigate to="/hod/dashboard" replace />;
+      }
+      return <Navigate to="/volunteer/dashboard" replace />;
     }
-    return <Navigate to="/volunteer/dashboard" replace />;
   }
 
   return children;
