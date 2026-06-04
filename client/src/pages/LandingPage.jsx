@@ -1,12 +1,18 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Users, UserCheck, ArrowRight } from "lucide-react";
+import { Users, UserCheck, ArrowRight } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
 
 function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+
+  // Control splash screen on first load
+  const [showSplash, setShowSplash] = React.useState(() => {
+    return !sessionStorage.getItem("hasLoadedIntro");
+  });
+  const [fadeSplash, setFadeSplash] = React.useState(false);
 
   React.useEffect(() => {
     if (isAuthenticated && user) {
@@ -18,27 +24,79 @@ function LandingPage() {
     }
   }, [isAuthenticated, user, navigate]);
 
+  React.useEffect(() => {
+    if (showSplash) {
+      // Start fading out splash screen shortly before removing it
+      const fadeTimer = setTimeout(() => {
+        setFadeSplash(true);
+      }, 1800);
+
+      const removeTimer = setTimeout(() => {
+        setShowSplash(false);
+        sessionStorage.setItem("hasLoadedIntro", "true");
+      }, 2500);
+
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(removeTimer);
+      };
+    }
+  }, [showSplash]);
+
   return (
     <div className="login-bg min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* First-time Splash Loading Intro */}
+      {showSplash && (
+        <div
+          className={`fixed inset-0 z-50 bg-mesh flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
+            fadeSplash ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
+          }`}
+        >
+          {/* Splash background orbs */}
+          <div className="login-orb w-[350px] h-[350px] bg-primary-500/20 top-[-5%] left-[-5%] blur-[50px]" />
+          <div className="login-orb w-[350px] h-[350px] bg-srkrBlue-500/20 bottom-[-5%] right-[-5%] blur-[50px]" />
+
+          <div className="relative z-10 flex flex-col items-center text-center px-6 animate-scale-in">
+            <img
+              src="/srkr_logo.png"
+              alt="SRKR College Logo"
+              className="w-36 h-36 md:w-44 md:h-44 object-contain mb-8 animate-pulse-glow rounded-full p-2 bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-xl"
+            />
+            <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-primary-500 to-srkrBlue-500 bg-clip-text text-transparent tracking-wider uppercase">
+              SRKR Engineering College
+            </h2>
+            <div className="w-16 h-1 bg-gradient-to-r from-primary-500 to-srkrBlue-500 rounded-full mt-4 mb-4" />
+            <p className="text-gray-600 dark:text-gray-400 mt-2 tracking-widest text-xs md:text-sm font-semibold uppercase">
+              Smart Admission Tracking & Verification
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Floating Orbs */}
       <div className="login-orb" />
       <div className="login-orb" />
 
       <div className="relative z-10 max-w-5xl w-full">
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white shadow-xl shadow-primary-500/25">
-              <GraduationCap className="w-8 h-8" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
-              AdmitTrack
+        <div className="text-center mb-16 animate-fade-in">
+          <div className="flex flex-col items-center justify-center mb-6">
+            <img
+              src="/srkr_logo.png"
+              alt="SRKR Engineering College Logo"
+              className="w-24 h-24 md:w-28 md:h-28 object-contain mb-5 animate-float"
+            />
+            <h1 className="text-3xl md:text-4.5xl font-black bg-gradient-to-r from-primary-600 via-primary-500 to-srkrBlue-600 bg-clip-text text-transparent tracking-wide">
+              SRKR Engineering College
             </h1>
+            <p className="text-sm font-semibold tracking-widest text-srkrBlue-500 dark:text-srkrBlue-400 uppercase mt-1.5">
+              Autonomous
+            </p>
           </div>
-          <p className="text-xl text-gray-600 dark:text-gray-400 mb-2">
+          <p className="text-xl text-gray-600 dark:text-gray-400 mb-2 font-medium">
             EAPCET Admission Tracking System
           </p>
-          <p className="text-gray-500 dark:text-gray-500">
+          <p className="text-gray-500 dark:text-gray-500 text-sm">
             Select your role to continue
           </p>
         </div>
@@ -48,39 +106,39 @@ function LandingPage() {
           {/* HOD Card */}
           <div
             onClick={() => navigate("/login/hod")}
-            className="group cursor-pointer glass-card p-8 rounded-2xl hover:shadow-2xl hover:shadow-primary-500/20 transition-all duration-300 transform hover:-translate-y-2"
+            className="group cursor-pointer glass-card p-8 rounded-2xl hover:shadow-2xl hover:shadow-srkrBlue-500/25 transition-all duration-300 transform hover:-translate-y-2 border border-white/20 dark:border-srkrBlue-400/10"
           >
             <div className="flex items-center justify-between mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/50 transition-shadow">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-srkrBlue-400 to-srkrBlue-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-srkrBlue-500/50 transition-shadow">
                 <UserCheck className="w-8 h-8" />
               </div>
-              <ArrowRight className="w-6 h-6 text-primary-400 group-hover:translate-x-2 transition-transform" />
+              <ArrowRight className="w-6 h-6 text-srkrBlue-400 group-hover:translate-x-2 transition-transform" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
               HOD
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Head of Department
+              Head of Department Portal
             </p>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <ul className="space-y-2.5 text-sm text-gray-600 dark:text-gray-400">
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                Upload student data
+                <div className="w-1.5 h-1.5 rounded-full bg-srkrBlue-500" />
+                Upload student data (CSV/XLSX/PDF)
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                View department statistics
+                <div className="w-1.5 h-1.5 rounded-full bg-srkrBlue-500" />
+                View department statistics & analytics
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                Access audit logs
+                <div className="w-1.5 h-1.5 rounded-full bg-srkrBlue-500" />
+                Access secure audit logs
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                Manage all students
+                <div className="w-1.5 h-1.5 rounded-full bg-srkrBlue-500" />
+                Manage student records
               </li>
             </ul>
-            <button className="mt-8 w-full glass-button py-3 rounded-xl font-semibold group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-colors">
+            <button className="mt-8 w-full glass-button bg-gradient-to-r from-srkrBlue-500 to-srkrBlue-600 hover:from-srkrBlue-600 hover:to-srkrBlue-700 shadow-srkrBlue-500/20 py-3 rounded-xl font-semibold transition-colors">
               Continue as HOD
             </button>
           </div>
@@ -88,10 +146,10 @@ function LandingPage() {
           {/* Volunteer Card */}
           <div
             onClick={() => navigate("/login/volunteer")}
-            className="group cursor-pointer glass-card p-8 rounded-2xl hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-300 transform hover:-translate-y-2"
+            className="group cursor-pointer glass-card p-8 rounded-2xl hover:shadow-2xl hover:shadow-primary-500/25 transition-all duration-300 transform hover:-translate-y-2 border border-white/20 dark:border-primary-400/10"
           >
             <div className="flex items-center justify-between mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-emerald-500/50 transition-shadow">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-primary-500/50 transition-shadow">
                 <Users className="w-8 h-8" />
               </div>
               <ArrowRight className="w-6 h-6 text-primary-400 group-hover:translate-x-2 transition-transform" />
@@ -100,39 +158,39 @@ function LandingPage() {
               Volunteer
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Admission Volunteer / Coordinator
+              Admission Coordinator
             </p>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <ul className="space-y-2.5 text-sm text-gray-600 dark:text-gray-400">
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Search students
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                Search & filter students
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Update student status
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                Update student verification status
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                View pending students
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                Add verification remarks
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Track progress
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                Track overall progress
               </li>
             </ul>
-            <button className="mt-8 w-full glass-button py-3 rounded-xl font-semibold group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-colors">
+            <button className="mt-8 w-full glass-button py-3 rounded-xl font-semibold transition-colors">
               Continue as Volunteer
             </button>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-3 animate-fade-in">
           <p className="text-gray-600 dark:text-gray-400 text-sm">
             Smart Admission Tracking & Verification System
           </p>
           <p className="text-gray-500 dark:text-gray-500 text-xs">
-            © 2024 All rights reserved
+            © 2026 All rights reserved
           </p>
         </div>
       </div>
