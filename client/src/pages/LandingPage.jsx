@@ -64,7 +64,7 @@ function LandingPage() {
               <img
                 src="/srkr_logo.png"
                 alt="SRKR College Logo"
-                className="w-80 md:w-[48px] h-auto object-contain"
+                className="w-80 md:w-[480px] h-auto object-contain"
               />
             </div>
 
@@ -95,10 +95,10 @@ function LandingPage() {
               alt="SRKR Engineering College Logo"
               className="w-72 md:w-96 h-auto object-contain mb-5 animate-float"
             />
-            <h1 className="text-3xl md:text-4.5xl font-black bg-gradient-to-r from-primary-600 via-primary-500 to-srkrOrange-600 bg-clip-text text-transparent tracking-wide">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black bg-gradient-to-r from-primary-600 via-primary-500 to-srkrOrange-600 bg-clip-text text-transparent tracking-wide">
               SRKR Engineering College
             </h1>
-            <p className="text-sm font-semibold tracking-widest text-primary-500 dark:text-primary-400 uppercase mt-1.5">
+            <p className="text-base md:text-lg font-bold tracking-widest text-primary-500 dark:text-primary-400 uppercase mt-2">
               Autonomous
             </p>
           </div>
