@@ -5,9 +5,10 @@ import AuditLog from "../models/AuditLog.js";
  * Service to handle bulk inserting and deduplicating students.
  */
 export const bulkInsertStudents = async (parsedStudents, userId, userRole) => {
-  const hallTickets = parsedStudents.map((s) =>
-    s.hallTicketNumber.toUpperCase(),
-  );
+  const hallTickets = parsedStudents
+    .map((s) => s.hallTicketNumber)
+    .filter((ht) => typeof ht === "string")
+    .map((ht) => ht.toUpperCase());
 
   // Find existing records to skip duplicates
   const existing = await Student.find({
