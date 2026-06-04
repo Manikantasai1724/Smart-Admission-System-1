@@ -94,7 +94,7 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
               AdmitTrack v1.0.0
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-600 mt-0.5">
-              © 2024 Smart Admissions
+              © 2026 Smart Admissions
             </p>
           </div>
         </div>

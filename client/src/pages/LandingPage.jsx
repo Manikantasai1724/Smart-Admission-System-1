@@ -29,12 +29,12 @@ function LandingPage() {
       // Start fading out splash screen shortly before removing it
       const fadeTimer = setTimeout(() => {
         setFadeSplash(true);
-      }, 1800);
+      }, 3100);
 
       const removeTimer = setTimeout(() => {
         setShowSplash(false);
         sessionStorage.setItem("hasLoadedIntro", "true");
-      }, 2500);
+      }, 3800);
 
       return () => {
         clearTimeout(fadeTimer);
@@ -45,30 +45,37 @@ function LandingPage() {
 
   return (
     <div className="login-bg min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* First-time Splash Loading Intro */}
+      {/* First-time Splash Loading Intro (Cinematic full-page transition) */}
       {showSplash && (
         <div
-          className={`fixed inset-0 z-50 bg-mesh flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
+          className={`fixed inset-0 z-50 bg-[#060202] flex flex-col items-center justify-center transition-all duration-[800ms] ease-in-out ${
             fadeSplash ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
           }`}
         >
-          {/* Splash background orbs */}
-          <div className="login-orb w-[350px] h-[350px] bg-primary-500/20 top-[-5%] left-[-5%] blur-[50px]" />
-          <div className="login-orb w-[350px] h-[350px] bg-srkrBlue-500/20 bottom-[-5%] right-[-5%] blur-[50px]" />
+          {/* Splash background orbs for cinematic lighting */}
+          <div className="login-orb w-[500px] h-[500px] bg-primary-500/15 top-[15%] left-[15%] blur-[80px] animate-pulse-glow" />
+          <div className="login-orb w-[500px] h-[500px] bg-srkrBlue-500/10 bottom-[15%] right-[15%] blur-[80px] animate-pulse-glow" />
 
-          <div className="relative z-10 flex flex-col items-center text-center px-6 animate-scale-in">
-            <img
-              src="/srkr_logo.png"
-              alt="SRKR College Logo"
-              className="w-36 h-36 md:w-44 md:h-44 object-contain mb-8 animate-pulse-glow rounded-full p-2 bg-white/20 dark:bg-black/20 backdrop-blur-md shadow-xl"
-            />
-            <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-primary-500 to-srkrBlue-500 bg-clip-text text-transparent tracking-wider uppercase">
-              SRKR Engineering College
-            </h2>
-            <div className="w-16 h-1 bg-gradient-to-r from-primary-500 to-srkrBlue-500 rounded-full mt-4 mb-4" />
-            <p className="text-gray-600 dark:text-gray-400 mt-2 tracking-widest text-xs md:text-sm font-semibold uppercase">
-              Smart Admission Tracking & Verification
-            </p>
+          <div className="relative z-10 flex flex-col items-center text-center px-6">
+            {/* Cinematic Zoom/Rotate Logo with sweeping metallic shine */}
+            <div className="animate-cinematic-logo mb-10 rounded-full p-4 bg-white/5 backdrop-blur-md shadow-2xl border border-white/10 animate-flash-sweep">
+              <img
+                src="/srkr_logo.png"
+                alt="SRKR College Logo"
+                className="w-40 h-40 md:w-52 md:h-52 object-contain"
+              />
+            </div>
+            
+            {/* Cinematic Fade-in Text */}
+            <div className="animate-cinematic-text">
+              <h2 className="text-3xl md:text-5xl font-black bg-gradient-to-r from-primary-400 via-primary-100 to-srkrBlue-400 bg-clip-text text-transparent tracking-widest uppercase">
+                SRKR Engineering College
+              </h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-primary-500 to-srkrBlue-500 rounded-full mt-5 mb-5 mx-auto opacity-70" />
+              <p className="text-gray-400 mt-2 tracking-widest text-xs md:text-sm font-semibold uppercase">
+                Smart Admission Tracking & Verification
+              </p>
+            </div>
           </div>
         </div>
       )}

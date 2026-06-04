@@ -197,7 +197,7 @@ function LoginPage() {
               Smart Admission Tracking & Verification System
             </p>
             <p className="text-xs text-white/20 mt-1">
-              © 2024 All rights reserved
+              © 2026 All rights reserved
             </p>
           </div>
         </div>
