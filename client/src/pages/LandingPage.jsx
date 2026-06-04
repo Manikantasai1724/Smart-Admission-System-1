@@ -51,9 +51,8 @@ function LandingPage() {
       {/* First-time Splash Loading Intro (Cinematic full-page transition) */}
       {showSplash && (
         <div
-          className={`fixed inset-0 z-50 bg-[#02101a] flex flex-col items-center justify-center transition-all duration-[800ms] ease-in-out ${
-            fadeSplash ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
-          }`}
+          className={`fixed inset-0 z-50 bg-[#02101a] flex flex-col items-center justify-center transition-all duration-[800ms] ease-in-out ${fadeSplash ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
+            }`}
         >
           {/* Splash background orbs for cinematic lighting */}
           <div className="login-orb w-[500px] h-[500px] bg-primary-500/15 top-[15%] left-[15%] blur-[80px] animate-pulse-glow" />
@@ -61,14 +60,14 @@ function LandingPage() {
 
           <div className="relative z-10 flex flex-col items-center text-center px-6">
             {/* Cinematic Zoom/Rotate Logo with sweeping metallic shine */}
-            <div className="animate-cinematic-logo mb-10 rounded-full p-4 bg-white/5 backdrop-blur-md shadow-2xl border border-white/10 animate-flash-sweep">
+            <div className="animate-cinematic-logo mb-10 rounded-2xl p-4 bg-white/5 backdrop-blur-md shadow-2xl border border-white/10 animate-flash-sweep">
               <img
                 src="/srkr_logo.png"
                 alt="SRKR College Logo"
-                className="w-40 h-40 md:w-52 md:h-52 object-contain"
+                className="w-80 md:w-[48px] h-auto object-contain"
               />
             </div>
-            
+
             {/* Cinematic Fade-in Text */}
             <div className="animate-cinematic-text">
               <h2 className="text-3xl md:text-5xl font-black bg-gradient-to-r from-primary-400 via-primary-100 to-srkrOrange-400 bg-clip-text text-transparent tracking-widest uppercase">
@@ -94,7 +93,7 @@ function LandingPage() {
             <img
               src="/srkr_logo.png"
               alt="SRKR Engineering College Logo"
-              className="w-24 h-24 md:w-28 md:h-28 object-contain mb-5 animate-float"
+              className="w-72 md:w-96 h-auto object-contain mb-5 animate-float"
             />
             <h1 className="text-3xl md:text-4.5xl font-black bg-gradient-to-r from-primary-600 via-primary-500 to-srkrOrange-600 bg-clip-text text-transparent tracking-wide">
               SRKR Engineering College
