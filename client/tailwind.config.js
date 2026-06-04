@@ -9,30 +9,30 @@ export default {
       },
       colors: {
         primary: {
-          50: '#fdf2f2',
-          100: '#fde2e1',
-          200: '#fbcacc',
-          300: '#f7a5a8',
-          400: '#f17176',
-          500: '#8b1e1b', // Brand Maroon
-          600: '#7c1715',
-          700: '#681110',
-          800: '#560d0c',
-          900: '#480b0a',
-          950: '#260403',
+          50: '#eaf4f9',
+          100: '#d5e9f3',
+          200: '#abd4e7',
+          300: '#81bedb',
+          400: '#57a9cf',
+          500: '#076593', // SRKREC Ocean Blue
+          600: '#065982',
+          700: '#054a6d',
+          800: '#043e5c',
+          900: '#03334d',
+          950: '#021d2b',
         },
-        srkrBlue: {
-          50: '#e6f1fc',
-          100: '#ccdefa',
-          200: '#99bdf5',
-          300: '#669bf0',
-          400: '#337aeb',
-          500: '#0054a6', // Brand Royal Blue
-          600: '#004c96',
-          700: '#00407e',
-          800: '#003567',
-          900: '#002950',
-          950: '#00172e',
+        srkrOrange: {
+          50: '#fdf6f4',
+          100: '#faede9',
+          200: '#f5dacd',
+          300: '#efa993',
+          400: '#e98c71',
+          500: '#ea6645', // SRKREC Accent Orange
+          600: '#d25c3e',
+          700: '#af4d34',
+          800: '#92402b',
+          900: '#7a3524',
+          950: '#421d13',
         },
         success: {
           50: '#f0fdf4',
@@ -103,8 +103,8 @@ export default {
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 8px rgba(139, 30, 27, 0.3)' },
-          '50%': { boxShadow: '0 0 25px rgba(0, 84, 166, 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 8px rgba(7, 101, 147, 0.3)' },
+          '50%': { boxShadow: '0 0 25px rgba(234, 102, 69, 0.6)' },
         },
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
@@ -146,8 +146,8 @@ export default {
       boxShadow: {
         'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
         'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
-        'glow': '0 0 15px rgba(139, 30, 27, 0.3)',
-        'glow-lg': '0 0 30px rgba(139, 30, 27, 0.45)',
+        'glow': '0 0 15px rgba(7, 101, 147, 0.3)',
+        'glow-lg': '0 0 30px rgba(7, 101, 147, 0.45)',
       },
     },
   },

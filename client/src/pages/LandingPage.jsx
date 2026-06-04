@@ -4,13 +4,16 @@ import { Users, UserCheck, ArrowRight } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
 
+// Module-level variable (persists during client-side routing, resets on browser refresh)
+let hasRunSplash = false;
+
 function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
 
-  // Control splash screen on first load
+  // Control splash screen on first load / page refresh
   const [showSplash, setShowSplash] = React.useState(() => {
-    return !sessionStorage.getItem("hasLoadedIntro");
+    return !hasRunSplash;
   });
   const [fadeSplash, setFadeSplash] = React.useState(false);
 
@@ -33,7 +36,7 @@ function LandingPage() {
 
       const removeTimer = setTimeout(() => {
         setShowSplash(false);
-        sessionStorage.setItem("hasLoadedIntro", "true");
+        hasRunSplash = true;
       }, 3800);
 
       return () => {
@@ -48,13 +51,13 @@ function LandingPage() {
       {/* First-time Splash Loading Intro (Cinematic full-page transition) */}
       {showSplash && (
         <div
-          className={`fixed inset-0 z-50 bg-[#060202] flex flex-col items-center justify-center transition-all duration-[800ms] ease-in-out ${
+          className={`fixed inset-0 z-50 bg-[#02101a] flex flex-col items-center justify-center transition-all duration-[800ms] ease-in-out ${
             fadeSplash ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
           }`}
         >
           {/* Splash background orbs for cinematic lighting */}
           <div className="login-orb w-[500px] h-[500px] bg-primary-500/15 top-[15%] left-[15%] blur-[80px] animate-pulse-glow" />
-          <div className="login-orb w-[500px] h-[500px] bg-srkrBlue-500/10 bottom-[15%] right-[15%] blur-[80px] animate-pulse-glow" />
+          <div className="login-orb w-[500px] h-[500px] bg-srkrOrange-500/10 bottom-[15%] right-[15%] blur-[80px] animate-pulse-glow" />
 
           <div className="relative z-10 flex flex-col items-center text-center px-6">
             {/* Cinematic Zoom/Rotate Logo with sweeping metallic shine */}
@@ -68,10 +71,10 @@ function LandingPage() {
             
             {/* Cinematic Fade-in Text */}
             <div className="animate-cinematic-text">
-              <h2 className="text-3xl md:text-5xl font-black bg-gradient-to-r from-primary-400 via-primary-100 to-srkrBlue-400 bg-clip-text text-transparent tracking-widest uppercase">
+              <h2 className="text-3xl md:text-5xl font-black bg-gradient-to-r from-primary-400 via-primary-100 to-srkrOrange-400 bg-clip-text text-transparent tracking-widest uppercase">
                 SRKR Engineering College
               </h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-primary-500 to-srkrBlue-500 rounded-full mt-5 mb-5 mx-auto opacity-70" />
+              <div className="w-24 h-1 bg-gradient-to-r from-primary-500 to-srkrOrange-500 rounded-full mt-5 mb-5 mx-auto opacity-70" />
               <p className="text-gray-400 mt-2 tracking-widest text-xs md:text-sm font-semibold uppercase">
                 Smart Admission Tracking & Verification
               </p>
@@ -93,10 +96,10 @@ function LandingPage() {
               alt="SRKR Engineering College Logo"
               className="w-24 h-24 md:w-28 md:h-28 object-contain mb-5 animate-float"
             />
-            <h1 className="text-3xl md:text-4.5xl font-black bg-gradient-to-r from-primary-600 via-primary-500 to-srkrBlue-600 bg-clip-text text-transparent tracking-wide">
+            <h1 className="text-3xl md:text-4.5xl font-black bg-gradient-to-r from-primary-600 via-primary-500 to-srkrOrange-600 bg-clip-text text-transparent tracking-wide">
               SRKR Engineering College
             </h1>
-            <p className="text-sm font-semibold tracking-widest text-srkrBlue-500 dark:text-srkrBlue-400 uppercase mt-1.5">
+            <p className="text-sm font-semibold tracking-widest text-primary-500 dark:text-primary-400 uppercase mt-1.5">
               Autonomous
             </p>
           </div>
@@ -110,16 +113,16 @@ function LandingPage() {
 
         {/* Role Selection Cards */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          {/* HOD Card */}
+          {/* HOD Card (Ocean Blue Theme) */}
           <div
             onClick={() => navigate("/login/hod")}
-            className="group cursor-pointer glass-card p-8 rounded-2xl hover:shadow-2xl hover:shadow-srkrBlue-500/25 transition-all duration-300 transform hover:-translate-y-2 border border-white/20 dark:border-srkrBlue-400/10"
+            className="group cursor-pointer glass-card p-8 rounded-2xl hover:shadow-2xl hover:shadow-primary-500/25 transition-all duration-300 transform hover:-translate-y-2 border border-white/20 dark:border-primary-400/10"
           >
             <div className="flex items-center justify-between mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-srkrBlue-400 to-srkrBlue-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-srkrBlue-500/50 transition-shadow">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-primary-500/50 transition-shadow">
                 <UserCheck className="w-8 h-8" />
               </div>
-              <ArrowRight className="w-6 h-6 text-srkrBlue-400 group-hover:translate-x-2 transition-transform" />
+              <ArrowRight className="w-6 h-6 text-primary-400 group-hover:translate-x-2 transition-transform" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
               HOD
@@ -129,37 +132,37 @@ function LandingPage() {
             </p>
             <ul className="space-y-2.5 text-sm text-gray-600 dark:text-gray-400">
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-srkrBlue-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
                 Upload student data (CSV/XLSX/PDF)
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-srkrBlue-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
                 View department statistics & analytics
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-srkrBlue-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
                 Access secure audit logs
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-srkrBlue-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
                 Manage student records
               </li>
             </ul>
-            <button className="mt-8 w-full glass-button bg-gradient-to-r from-srkrBlue-500 to-srkrBlue-600 hover:from-srkrBlue-600 hover:to-srkrBlue-700 shadow-srkrBlue-500/20 py-3 rounded-xl font-semibold transition-colors">
+            <button className="mt-8 w-full glass-button bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-primary-500/20 py-3 rounded-xl font-semibold transition-colors">
               Continue as HOD
             </button>
           </div>
 
-          {/* Volunteer Card */}
+          {/* Volunteer Card (Accent Orange Theme) */}
           <div
             onClick={() => navigate("/login/volunteer")}
-            className="group cursor-pointer glass-card p-8 rounded-2xl hover:shadow-2xl hover:shadow-primary-500/25 transition-all duration-300 transform hover:-translate-y-2 border border-white/20 dark:border-primary-400/10"
+            className="group cursor-pointer glass-card p-8 rounded-2xl hover:shadow-2xl hover:shadow-srkrOrange-500/25 transition-all duration-300 transform hover:-translate-y-2 border border-white/20 dark:border-srkrOrange-400/10"
           >
             <div className="flex items-center justify-between mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-primary-500/50 transition-shadow">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-srkrOrange-400 to-srkrOrange-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-srkrOrange-500/50 transition-shadow">
                 <Users className="w-8 h-8" />
               </div>
-              <ArrowRight className="w-6 h-6 text-primary-400 group-hover:translate-x-2 transition-transform" />
+              <ArrowRight className="w-6 h-6 text-srkrOrange-400 group-hover:translate-x-2 transition-transform" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
               Volunteer
@@ -169,23 +172,23 @@ function LandingPage() {
             </p>
             <ul className="space-y-2.5 text-sm text-gray-600 dark:text-gray-400">
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-srkrOrange-500" />
                 Search & filter students
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-srkrOrange-500" />
                 Update student verification status
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-srkrOrange-500" />
                 Add verification remarks
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-srkrOrange-500" />
                 Track overall progress
               </li>
             </ul>
-            <button className="mt-8 w-full glass-button py-3 rounded-xl font-semibold transition-colors">
+            <button className="mt-8 w-full glass-button bg-gradient-to-r from-srkrOrange-500 to-srkrOrange-600 hover:from-srkrOrange-600 hover:to-srkrOrange-700 shadow-srkrOrange-500/20 py-3 rounded-xl font-semibold transition-colors">
               Continue as Volunteer
             </button>
           </div>
