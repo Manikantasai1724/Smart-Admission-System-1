@@ -8,11 +8,14 @@ import SkeletonLoader, { SkeletonCard } from '../components/common/SkeletonLoade
 import { useToast } from '../context/ToastContext';
 import { getStudents, updateStudentStatus } from '../services/studentService';
 import { useSocket } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 import { STEP_LABELS } from '../utils/constants';
 
 function StudentsPage() {
   const { addToast } = useToast();
   const { socket } = useSocket();
+  const { user } = useAuth();
+  const isVolunteer = user?.role === 'volunteer';
 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +28,7 @@ function StudentsPage() {
   });
   const [filters, setFilters] = useState({
     search: '',
-    department: '',
+    department: isVolunteer ? user?.department : '',
     status: 'all',
   });
 
