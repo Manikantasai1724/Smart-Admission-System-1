@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, UserCheck, ArrowRight } from "lucide-react";
+import { Users, UserCheck, ArrowRight, ShieldCheck } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -111,7 +111,7 @@ function LandingPage() {
         </div>
 
         {/* Role Selection Cards */}
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
+        <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8 mb-12">
           {/* HOD Card (Ocean Blue Theme) */}
           <div
             onClick={() => navigate("/login/hod")}
@@ -189,6 +189,46 @@ function LandingPage() {
             </ul>
             <button className="mt-8 w-full glass-button bg-gradient-to-r from-srkrOrange-500 to-srkrOrange-600 hover:from-srkrOrange-600 hover:to-srkrOrange-700 shadow-srkrOrange-500/20 py-3 rounded-xl font-semibold transition-colors">
               Continue as Volunteer
+            </button>
+          </div>
+
+          {/* Admin Card (Purple/Indigo Theme) */}
+          <div
+            onClick={() => navigate("/admin")}
+            className="group cursor-pointer glass-card p-8 rounded-2xl hover:shadow-2xl hover:shadow-indigo-500/25 transition-all duration-300 transform hover:-translate-y-2 border border-white/20 dark:border-indigo-400/10"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-indigo-500/50 transition-shadow">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <ArrowRight className="w-6 h-6 text-indigo-400 group-hover:translate-x-2 transition-transform" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+              Admin
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              System Administrator Portal
+            </p>
+            <ul className="space-y-2.5 text-sm text-gray-600 dark:text-gray-400">
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                Create and manage HOD/Volunteer users
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                Reset login passwords and credentials
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                Control role-based access permissions
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                Oversee entire system settings
+              </li>
+            </ul>
+            <button className="mt-8 w-full glass-button bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-indigo-500/20 py-3 rounded-xl font-semibold transition-colors">
+              Continue as Admin
             </button>
           </div>
         </div>

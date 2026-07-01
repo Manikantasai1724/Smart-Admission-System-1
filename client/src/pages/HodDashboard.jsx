@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, CheckCircle, Clock, AlertTriangle, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { Users, CheckCircle, Clock, Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import DashboardLayout from '../components/common/DashboardLayout';
 import StatCard from '../components/dashboard/StatCard';
@@ -168,8 +168,8 @@ function HodDashboard() {
 
       {loading ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {Array.from({ length: 2 }).map((_, i) => (
               <SkeletonLoader key={i} variant="stat-card" />
             ))}
           </div>
@@ -181,7 +181,7 @@ function HodDashboard() {
       ) : (
         <div className="space-y-6 stagger-children">
           {/* Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <StatCard
               title="Total Students"
               value={totalStudents}
@@ -199,16 +199,6 @@ function HodDashboard() {
               trendValue="+8%"
               color="success"
               delay={100}
-            />
-
-            <StatCard
-              title="Pending"
-              value={pending > 0 ? pending : 0}
-              icon={AlertTriangle}
-              trend="down"
-              trendValue="-5%"
-              color="warning"
-              delay={300}
             />
           </div>
 

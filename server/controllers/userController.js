@@ -30,14 +30,19 @@ export const createUser = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Username already exists" });
     }
 
-    const newUser = await User.create({
+    const userObj = {
       name,
       username,
-      email,
       password,
       role,
       department: department || "ALL"
-    });
+    };
+
+    if (email) {
+      userObj.email = email;
+    }
+
+    const newUser = await User.create(userObj);
 
     res.status(201).json({ success: true, user: newUser });
   } catch (error) {

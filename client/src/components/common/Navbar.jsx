@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, LogOut, GraduationCap, Bell } from 'lucide-react';
+import { Sun, Moon, LogOut, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -38,12 +38,6 @@ function Navbar({ onToggleSidebar }) {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
-            {/* Notification bell */}
-            <button className="relative p-2.5 rounded-xl hover:bg-white/30 dark:hover:bg-white/5 transition-all duration-200">
-              <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
-            </button>
-
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}

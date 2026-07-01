@@ -15,7 +15,7 @@ const seedUsers = [
     name: "Main Admin",
     username: "admin",
     email: "admin@college.edu",
-    password: "admin@123",
+    password: "admin123",
     role: "Admin",
     department: "ALL",
   },
@@ -105,7 +105,7 @@ const seed = async () => {
     console.log("─────────────────────────────────\n");
 
     console.log("📋 Login credentials:");
-    console.log("  Main Admin    → admin           / admin@123");
+    console.log("  Main Admin    → admin           / admin123");
     console.log("  CSE HOD       → hod             / hod123");
     console.log("  CSE Volunteer → volunteer       / vol123");
     console.log("  AIML HOD      → hod_aiml        / hod123");

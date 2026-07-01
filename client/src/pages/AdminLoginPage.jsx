@@ -57,6 +57,22 @@ function AdminLoginPage() {
     }
   };
 
+  const handleQuickLogin = async () => {
+    setIsLoading(true);
+    setLoginError("");
+    try {
+      await login("admin", "admin123");
+      addToast("success", "Welcome back, Admin!");
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Invalid username or password";
+      setLoginError(message);
+      addToast("error", message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="login-bg min-h-screen flex items-center justify-center p-4 relative">
       <div className="login-orb" />
@@ -162,6 +178,31 @@ function AdminLoginPage() {
                 <>
                   <ShieldCheck className="w-5 h-5" />
                   Enter System
+                </>
+              )}
+            </button>
+
+            <div className="relative flex py-4 items-center">
+              <div className="flex-grow border-t border-gray-300 dark:border-gray-700/50"></div>
+              <span className="flex-shrink mx-4 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">or</span>
+              <div className="flex-grow border-t border-gray-300 dark:border-gray-700/50"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleQuickLogin}
+              disabled={isLoading}
+              className="w-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-md active:translate-y-0"
+            >
+              {isLoading ? (
+                <>
+                  <Loader className="w-5 h-5 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-5 h-5" />
+                  Quick Login (admin / admin123)
                 </>
               )}
             </button>
