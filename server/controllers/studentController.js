@@ -33,10 +33,8 @@ export const getStudents = async (req, res, next) => {
     // ── Base filter: only active students ──────────────────────────
     const filter = { isActive: true };
 
-    // Department filter (enforce isolation for Volunteers)
-    if (req.user && req.user.role && req.user.role.toLowerCase() === 'volunteer') {
-      filter.department = { $regex: `^${req.user.department}$`, $options: "i" };
-    } else if (req.query.department) {
+    // Department filter
+    if (req.query.department) {
       filter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
 
@@ -168,16 +166,6 @@ export const getStudentById = async (req, res, next) => {
       });
     }
 
-    // Enforce department isolation for Volunteers
-    if (req.user && req.user.role && req.user.role.toLowerCase() === 'volunteer') {
-      if (!student.department || student.department.toLowerCase() !== req.user.department.toLowerCase()) {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. You do not have permission to view students from other departments.",
-        });
-      }
-    }
-
     // Fetch recent audit logs for this student
     const auditLogs = await AuditLog.find({ studentId: student._id })
       .sort({ timestamp: -1 })
@@ -276,16 +264,6 @@ export const updateStudentStatus = async (req, res, next) => {
         success: false,
         message: "Student not found.",
       });
-    }
-
-    // Enforce department isolation for Volunteers
-    if (req.user && req.user.role && req.user.role.toLowerCase() === 'volunteer') {
-      if (!student.department || student.department.toLowerCase() !== req.user.department.toLowerCase()) {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. You do not have permission to update students from other departments.",
-        });
-      }
     }
 
     // Capture old values for the audit trail

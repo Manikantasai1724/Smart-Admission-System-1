@@ -16,10 +16,8 @@ export const getStats = async (req, res, next) => {
   try {
     const baseFilter = { isActive: true };
 
-    // Enforce department scope for Volunteers, or check query param for others
-    if (req.user && req.user.role && req.user.role.toLowerCase() === 'volunteer') {
-      baseFilter.department = { $regex: `^${req.user.department}$`, $options: "i" };
-    } else if (req.query.department) {
+    // Optionally scope to the HOD's department
+    if (req.query.department) {
       baseFilter.department = req.query.department;
     }
 
@@ -64,16 +62,7 @@ export const getStats = async (req, res, next) => {
     const inProgressStudents = 0; // Deprecated, keeping for UI backward compatibility if needed
 
     // ── Recent activity ───────────────────────────────────────────
-    let activityFilter = {};
-    if (baseFilter.department) {
-      const studentIds = await Student.find({
-        department: baseFilter.department,
-        isActive: true
-      }).distinct('_id');
-      activityFilter.studentId = { $in: studentIds };
-    }
-
-    const recentActivity = await AuditLog.find(activityFilter)
+    const recentActivity = await AuditLog.find({})
       .sort({ timestamp: -1 })
       .limit(10)
       .populate('studentId', 'name hallTicketNumber department')
