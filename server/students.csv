@@ -1,0 +1,4 @@
+hallTicketNumber,name,rank,department,phone,parentName,email,address,category,gender
+00001,Ramesh Kumar,1234,CSE,9876543210,Ramesh Parent,ramesh@student.edu,123 St,OC,Male
+00002,Priya Sharma,2345,AIML,9876543220,Priya Parent,priya@student.edu,456 St,BC-A,Female
+00003,Arun Patel,3456,CIC,9876543230,Arun Parent,arun@student.edu,789 St,OC,Male

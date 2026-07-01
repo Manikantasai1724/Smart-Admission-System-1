@@ -2,11 +2,17 @@ import React, { useState } from "react";
 import { Search, Filter, X, SlidersHorizontal } from "lucide-react";
 import { useDebounce } from "../../hooks/useDebounce";
 import { DEPARTMENTS, STATUS_FILTERS } from "../../utils/constants";
+import { useAuth } from "../../context/AuthContext";
 
 function StudentSearch({ onSearch, onFilter, filters = {} }) {
+  const { user } = useAuth();
+  const isVolunteer = user?.role === "volunteer";
+
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
   const [showFilters, setShowFilters] = useState(false);
-  const [department, setDepartment] = useState(filters.department || "");
+  const [department, setDepartment] = useState(
+    isVolunteer ? user?.department : (filters.department || "")
+  );
   const [status, setStatus] = useState(filters.status || "all");
   const [rankFilter, setRankFilter] = useState(filters.rankMin || "");
   const [rankMaxFilter, setRankMaxFilter] = useState(filters.rankMax || "");
@@ -65,14 +71,15 @@ function StudentSearch({ onSearch, onFilter, filters = {} }) {
 
   const clearFilters = () => {
     setSearchTerm("");
-    setDepartment("");
+    const defaultDept = isVolunteer ? user?.department : "";
+    setDepartment(defaultDept);
     setStatus("all");
     setRankFilter("");
     setRankMaxFilter("");
     setPhoneFilter("");
     onSearch?.("");
     onFilter?.({
-      department: "",
+      department: defaultDept,
       status: "all",
       rankMin: "",
       rankMax: "",
@@ -141,14 +148,21 @@ function StudentSearch({ onSearch, onFilter, filters = {} }) {
               <select
                 value={department}
                 onChange={(e) => handleDepartmentChange(e.target.value)}
-                className="glass-input w-full text-sm"
+                className="glass-input w-full text-sm disabled:opacity-75 disabled:cursor-not-allowed"
+                disabled={isVolunteer}
               >
-                <option value="">All Departments</option>
-                {DEPARTMENTS.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
+                {isVolunteer ? (
+                  <option value={user?.department}>{user?.department}</option>
+                ) : (
+                  <>
+                    <option value="">All Departments</option>
+                    {DEPARTMENTS.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
 
