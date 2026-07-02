@@ -114,6 +114,7 @@ const studentSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // adds createdAt & updatedAt
+    optimisticConcurrency: true,
     toJSON: {
       transform(_doc, ret) {
         delete ret.__v;
@@ -128,6 +129,9 @@ const studentSchema = new mongoose.Schema(
 studentSchema.index({ rank: 1 });
 studentSchema.index({ department: 1 });
 studentSchema.index({ name: "text" }); // text search
+studentSchema.index({ tokenNumber: 1 });
+studentSchema.index({ phone: 1 });
+studentSchema.index({ parentPhone: 1 });
 studentSchema.index({
   department: 1,
   selfReported: 1,

@@ -5,7 +5,6 @@ import DashboardLayout from '../components/common/DashboardLayout';
 import StatCard from '../components/dashboard/StatCard';
 import TrendChart from '../components/dashboard/TrendChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
-import ProgressRing from '../components/dashboard/ProgressRing';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -99,6 +98,12 @@ function HodDashboard() {
     { name: 'Pending', value: pending > 0 ? pending : 0 },
   ].filter(d => d.value > 0);
 
+  const completedToday = stats?.todayCount || 0;
+  const todayPieData = [
+    { name: 'Completed Today', value: completedToday },
+    { name: 'Pending', value: pending > 0 ? pending : 0 },
+  ].filter(d => d.value > 0);
+
   const filteredDeptData = selectedDepartment
     ? departmentData.filter(d => d.department === selectedDepartment || d.name === selectedDepartment)
     : departmentData;
@@ -114,7 +119,15 @@ function HodDashboard() {
         return addToast('error', 'No students found to export');
       }
 
-      const data = students.map(student => {
+      // Group students by status (Completed first, then Pending)
+      const sortedStudents = [...students].sort((a, b) => {
+        const aComp = a.selfReported && a.documentsSubmitted && a.formFilled;
+        const bComp = b.selfReported && b.documentsSubmitted && b.formFilled;
+        if (aComp === bComp) return 0;
+        return aComp ? -1 : 1;
+      });
+
+      const data = sortedStudents.map(student => {
         const isCompleted = student.selfReported && student.documentsSubmitted && student.formFilled;
         return {
           'Hall Ticket Number': student.hallTicketNumber || '—',
@@ -151,7 +164,15 @@ function HodDashboard() {
         return addToast('error', 'No students found to export');
       }
 
-      const data = students.map(student => {
+      // Group students by status (Completed first, then Pending)
+      const sortedStudents = [...students].sort((a, b) => {
+        const aComp = a.selfReported && a.documentsSubmitted && a.formFilled;
+        const bComp = b.selfReported && b.documentsSubmitted && b.formFilled;
+        if (aComp === bComp) return 0;
+        return aComp ? -1 : 1;
+      });
+
+      const data = sortedStudents.map(student => {
         const isCompleted = student.selfReported && student.documentsSubmitted && student.formFilled;
         return {
           'Hall Ticket Number': student.hallTicketNumber || '—',
@@ -240,8 +261,6 @@ function HodDashboard() {
               title="Total Students"
               value={totalStudents}
               icon={Users}
-              trend="up"
-              trendValue="+12%"
               color="primary"
               delay={0}
             />
@@ -249,31 +268,125 @@ function HodDashboard() {
               title="Completed"
               value={completed}
               icon={CheckCircle}
-              trend="up"
-              trendValue="+8%"
               color="success"
               delay={100}
             />
           </div>
 
-          {/* Charts Row 1 */}
+          {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="glass-card p-6 h-full">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Overall Completion
+            {/* Overall Completion Chart */}
+            <div className="glass-card p-6 flex flex-col justify-between min-h-[360px]">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Overall Progress
               </h3>
-              <div className="flex flex-col items-center justify-center h-[calc(100%-3rem)]">
-                <ProgressRing percentage={completionRate} size={160} strokeWidth={12} />
-                <div className="mt-6 space-y-2 w-full">
-                  {pieData.map((entry, index) => (
-                    <div key={entry.name} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PIE_COLORS[index] }} />
-                        <span className="text-gray-600 dark:text-gray-400">{entry.name}</span>
-                      </div>
-                      <span className="font-semibold text-gray-800 dark:text-gray-200">{entry.value}</span>
+              <div className="flex-1 flex flex-col items-center justify-center">
+                {pieData.length > 0 ? (
+                  <div className="w-full h-44 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={75}
+                          paddingAngle={4}
+                          dataKey="value"
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.name === 'Completed' ? '#10b981' : '#f59e0b'} 
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomPieTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-2xl font-extrabold text-gray-800 dark:text-white">{completionRate}%</span>
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase">Done</span>
                     </div>
-                  ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">No data available</p>
+                )}
+                
+                <div className="mt-4 space-y-2 w-full px-4">
+                  <div className="flex items-center justify-between text-xs font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
+                      <span className="text-gray-500 dark:text-gray-400">Completed</span>
+                    </div>
+                    <span className="text-gray-800 dark:text-gray-200">{completed} ({totalStudents > 0 ? Math.round((completed / totalStudents) * 100) : 0}%)</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
+                      <span className="text-gray-500 dark:text-gray-400">Pending</span>
+                    </div>
+                    <span className="text-gray-800 dark:text-gray-200">{pending > 0 ? pending : 0} ({totalStudents > 0 ? Math.round((pending / totalStudents) * 100) : 0}%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Today's Progress Chart */}
+            <div className="glass-card p-6 flex flex-col justify-between min-h-[360px]">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Today's Activity
+              </h3>
+              <div className="flex-1 flex flex-col items-center justify-center">
+                {todayPieData.length > 0 ? (
+                  <div className="w-full h-44 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={todayPieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={75}
+                          paddingAngle={4}
+                          dataKey="value"
+                        >
+                          {todayPieData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.name.startsWith('Completed') ? '#10b981' : '#f59e0b'} 
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomPieTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-2xl font-extrabold text-gray-800 dark:text-white">
+                        {completedToday}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase">Today</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">No data completed today</p>
+                )}
+                
+                <div className="mt-4 space-y-2 w-full px-4">
+                  <div className="flex items-center justify-between text-xs font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
+                      <span className="text-gray-500 dark:text-gray-400">Completed Today</span>
+                    </div>
+                    <span className="text-gray-800 dark:text-gray-200">{completedToday}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
+                      <span className="text-gray-500 dark:text-gray-400">Remaining Pending</span>
+                    </div>
+                    <span className="text-gray-800 dark:text-gray-200">{pending > 0 ? pending : 0}</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,7 +1,4 @@
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// Heavy libraries (xlsx, file-saver, jspdf, jspdf-autotable) are imported dynamically in export helpers to optimize bundle size.
 
 /**
  * Format date to a readable string
@@ -68,10 +65,10 @@ export function calculateCompletionPercentage(student) {
   return Math.round((completed / 3) * 100);
 }
 
-/**
- * Export data to Excel
- */
-export function exportToExcel(data, filename = 'export') {
+export async function exportToExcel(data, filename = 'export') {
+  const XLSX = await import('xlsx');
+  const { saveAs } = await import('file-saver');
+
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
@@ -87,10 +84,9 @@ export function exportToExcel(data, filename = 'export') {
   saveAs(blob, `${filename}.xlsx`);
 }
 
-/**
- * Export data to PDF
- */
-export function exportToPDF(data, columns, title = 'Report') {
+export async function exportToPDF(data, columns, title = 'Report') {
+  const { default: jsPDF } = await import('jspdf');
+  await import('jspdf-autotable');
   const doc = new jsPDF();
 
   // Title
