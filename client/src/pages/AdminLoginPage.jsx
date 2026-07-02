@@ -188,24 +188,7 @@ function AdminLoginPage() {
               <div className="flex-grow border-t border-gray-300 dark:border-gray-700/50"></div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleQuickLogin}
-              disabled={isLoading}
-              className="w-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-md active:translate-y-0"
-            >
-              {isLoading ? (
-                <>
-                  <Loader className="w-5 h-5 animate-spin" />
-                  Logging in...
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="w-5 h-5" />
-                  Quick Login (admin / admin123)
-                </>
-              )}
-            </button>
+
           </form>
         </div>
       </div>

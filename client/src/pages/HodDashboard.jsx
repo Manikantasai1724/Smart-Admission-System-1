@@ -11,7 +11,8 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useToast } from '../context/ToastContext';
 import { getStats, getDepartmentProgress } from '../services/dashboardService';
-import { getGreeting, exportToExcel, exportToPDF } from '../utils/helpers';
+import studentService from '../services/studentService';
+import { getGreeting, exportToExcel, exportToPDF, formatDate } from '../utils/helpers';
 import { DEPARTMENTS } from '../utils/constants';
 
 const PIE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
@@ -41,8 +42,9 @@ function HodDashboard() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      const params = selectedDepartment ? { department: selectedDepartment } : {};
       const [statsRes, deptRes] = await Promise.all([
-        getStats(),
+        getStats(params),
         getDepartmentProgress(),
       ]);
       setStats(statsRes.data.stats || statsRes.data);
@@ -60,7 +62,7 @@ function HodDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, selectedDepartment]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -101,33 +103,85 @@ function HodDashboard() {
     ? departmentData.filter(d => d.department === selectedDepartment || d.name === selectedDepartment)
     : departmentData;
 
-  const handleExportExcel = () => {
-    const data = departmentData.map(d => ({
-      Department: d.department || d.name,
-      Total: d.total || 0,
-      Completed: d.completed || 0,
-      Pending: d.pending || (d.total - d.completed) || 0,
-      'Completion %': d.total ? Math.round((d.completed / d.total) * 100) : 0,
-    }));
-    exportToExcel(data, 'admission-department-report');
-    addToast('success', 'Excel report downloaded successfully');
+  const handleExportExcel = async () => {
+    try {
+      addToast('info', 'Preparing Excel export...');
+      const params = selectedDepartment ? { department: selectedDepartment } : {};
+      const res = await studentService.exportStudents(params);
+      const students = res.data.students || [];
+
+      if (students.length === 0) {
+        return addToast('error', 'No students found to export');
+      }
+
+      const data = students.map(student => {
+        const isCompleted = student.selfReported && student.documentsSubmitted && student.formFilled;
+        return {
+          'Hall Ticket Number': student.hallTicketNumber || '—',
+          'Name': student.name || '—',
+          'Email': student.email || '—',
+          'Phone': student.phone || '—',
+          'Parent Phone': student.parentPhone || '—',
+          'Department': student.department || '—',
+          'Rank': student.rank || '—',
+          'Self Reported': student.selfReported ? 'Yes' : 'No',
+          'Documents Submitted': student.documentsSubmitted ? 'Yes' : 'No',
+          'Form Filled': student.formFilled ? 'Yes' : 'No',
+          'Status': isCompleted ? 'Completed' : 'Pending',
+          'Completion Date & Time': isCompleted && student.completedAt ? formatDate(student.completedAt) : '—',
+        };
+      });
+
+      exportToExcel(data, 'students-admission-report');
+      addToast('success', 'Excel report downloaded successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      addToast('error', 'Failed to export students data');
+    }
   };
 
-  const handleExportPDF = () => {
-    const data = departmentData.map(d => ({
-      Department: d.department || d.name,
-      Total: d.total || 0,
-      Completed: d.completed || 0,
-      Pending: d.pending || (d.total - d.completed) || 0,
-    }));
-    const columns = [
-      { key: 'Department', header: 'Department' },
-      { key: 'Total', header: 'Total Students' },
-      { key: 'Completed', header: 'Completed' },
-      { key: 'Pending', header: 'Pending' },
-    ];
-    exportToPDF(data, columns, 'Admission Progress Report');
-    addToast('success', 'PDF report downloaded successfully');
+  const handleExportPDF = async () => {
+    try {
+      addToast('info', 'Preparing PDF export...');
+      const params = selectedDepartment ? { department: selectedDepartment } : {};
+      const res = await studentService.exportStudents(params);
+      const students = res.data.students || [];
+
+      if (students.length === 0) {
+        return addToast('error', 'No students found to export');
+      }
+
+      const data = students.map(student => {
+        const isCompleted = student.selfReported && student.documentsSubmitted && student.formFilled;
+        return {
+          'Hall Ticket Number': student.hallTicketNumber || '—',
+          'Name': student.name || '—',
+          'Email': student.email || '—',
+          'Phone': student.phone || '—',
+          'Parent Phone': student.parentPhone || '—',
+          'Department': student.department || '—',
+          'Rank': student.rank || '—',
+          'Status': isCompleted ? 'Completed' : 'Pending',
+        };
+      });
+
+      const columns = [
+        { key: 'Hall Ticket Number', header: 'Hall Ticket' },
+        { key: 'Name', header: 'Name' },
+        { key: 'Email', header: 'Email' },
+        { key: 'Phone', header: 'Phone' },
+        { key: 'Parent Phone', header: 'Parent Phone' },
+        { key: 'Department', header: 'Dept' },
+        { key: 'Rank', header: 'Rank' },
+        { key: 'Status', header: 'Status' },
+      ];
+
+      exportToPDF(data, columns, 'Students Admission Report');
+      addToast('success', 'PDF report downloaded successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      addToast('error', 'Failed to export students data');
+    }
   };
 
   return (

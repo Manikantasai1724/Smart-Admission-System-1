@@ -23,4 +23,12 @@ export const deleteStudent = (id) => {
   return api.delete(`/students/${id}`);
 };
 
-export default { getStudents, getStudentById, uploadStudents, updateStudentStatus, deleteStudent };
+export const deleteAllStudents = () => {
+  return api.delete('/students/bulk/all');
+};
+
+export const exportStudents = (params = {}) => {
+  return api.get('/students/export/all', { params });
+};
+
+export default { getStudents, getStudentById, uploadStudents, updateStudentStatus, deleteStudent, deleteAllStudents, exportStudents };

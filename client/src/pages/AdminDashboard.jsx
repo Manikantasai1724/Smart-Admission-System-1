@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Users, Plus, Edit2, Trash2, ShieldCheck, Loader } from "lucide-react";
 import DashboardLayout from "../components/common/DashboardLayout";
 import userService from "../services/userService";
+import studentService from "../services/studentService";
 import { useToast } from "../context/ToastContext";
 import { DEPARTMENTS } from "../utils/constants";
 
@@ -96,6 +97,16 @@ function AdminDashboard() {
     }
   };
 
+  const handleDeleteAllStudents = async () => {
+    if (!window.confirm("WARNING: This will permanently delete ALL students data from the database. Are you absolutely sure?")) return;
+    try {
+      await studentService.deleteAllStudents();
+      addToast("success", "All students data deleted successfully");
+    } catch (error) {
+      addToast("error", error.response?.data?.message || "Failed to delete students data");
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -107,13 +118,22 @@ function AdminDashboard() {
             Create and manage HOD and Volunteer accounts
           </p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add User
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => handleDeleteAllStudents()}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
+          >
+            <Trash2 className="w-5 h-5" />
+            Delete All Students
+          </button>
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Add User
+          </button>
+        </div>
       </div>
 
       <div className="glass-card rounded-2xl overflow-hidden border border-white/20 dark:border-primary-400/10">

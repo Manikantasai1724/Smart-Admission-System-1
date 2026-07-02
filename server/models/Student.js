@@ -45,6 +45,11 @@ const studentSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    parentPhone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     email: {
       type: String,
       lowercase: true,

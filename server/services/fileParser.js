@@ -58,6 +58,12 @@ const COLUMN_MAP = {
   parent_name: "parentName",
   "father name": "parentName",
   "mother name": "parentName",
+  parentphone: "parentPhone",
+  "parent phone": "parentPhone",
+  parent_phone: "parentPhone",
+  "parent mobile": "parentPhone",
+  "guardian mobile": "parentPhone",
+  "guardian phone": "parentPhone",
   address: "address",
   location: "address",
   city: "address",
@@ -93,6 +99,7 @@ const normalizeRow = (row) => {
   }
 
   if (student.phone) student.phone = cleanPhone(student.phone);
+  if (student.parentPhone) student.parentPhone = cleanPhone(student.parentPhone);
   if (student.email) student.email = cleanEmail(student.email);
 
   const { isValid, errors } = isValidStudentData(student);
@@ -187,7 +194,7 @@ const extractDataWithGemini = async (text) => {
 You are an expert data extraction assistant. I will provide you with raw text extracted from a PDF.
 This text contains a list of student admission records. Some of it might be messy, OCR'd, or missing labels.
 
-Extract ALL students found in the text. For each student, extract the following 8 fields:
+Extract ALL students found in the text. For each student, extract the following 9 fields:
 1. hallTicketNumber (string, required, typically 8-15 alphanumeric characters)
 2. name (string, required, student's full name)
 3. rank (number, required, e.g. EAMCET rank)
@@ -196,6 +203,7 @@ Extract ALL students found in the text. For each student, extract the following 
 6. email (string, optional)
 7. parentName (string, optional, father or mother's name)
 8. address (string, optional, full address or location)
+9. parentPhone (string, optional, extract whatever parent/guardian phone number is present)
 
 Return a JSON array of objects. Do not invent data. If an optional field is missing, leave it as an empty string.
 
@@ -221,6 +229,7 @@ ${text}
               phone: { type: Type.STRING },
               email: { type: Type.STRING },
               parentName: { type: Type.STRING },
+              parentPhone: { type: Type.STRING },
               address: { type: Type.STRING },
             },
             required: ["hallticketno", "name", "rank", "department", "phone"],

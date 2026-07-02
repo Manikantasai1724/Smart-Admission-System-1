@@ -1,7 +1,7 @@
 import api from './api';
 
-export const getStats = () => {
-  return api.get('/dashboard/stats');
+export const getStats = (params = {}) => {
+  return api.get('/dashboard/stats', { params });
 };
 
 export const getDepartmentProgress = () => {

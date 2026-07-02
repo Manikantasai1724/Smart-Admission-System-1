@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LayoutGrid, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import DashboardLayout from '../components/common/DashboardLayout';
-import StudentTable from '../components/students/StudentTable';
 import StudentCard from '../components/students/StudentCard';
 import StudentSearch from '../components/students/StudentSearch';
-import SkeletonLoader, { SkeletonCard } from '../components/common/SkeletonLoader';
+import { SkeletonCard } from '../components/common/SkeletonLoader';
 import { useToast } from '../context/ToastContext';
 import { getStudents, updateStudentStatus } from '../services/studentService';
 import { useSocket } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 import { STEP_LABELS } from '../utils/constants';
 
 function StudentsPage() {
   const { addToast } = useToast();
   const { socket } = useSocket();
+  const { user } = useAuth();
 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('table');
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -46,7 +46,11 @@ function StudentsPage() {
       const data = res.data;
       setStudents(data.students || data.data || []);
       if (data.pagination) {
-        setPagination(prev => ({ ...prev, ...data.pagination }));
+        setPagination(prev => ({ 
+          ...prev, 
+          ...data.pagination,
+          totalPages: data.pagination.pages || data.pagination.totalPages 
+        }));
       } else if (data.total !== undefined) {
         setPagination(prev => ({
           ...prev,
@@ -127,31 +131,6 @@ function StudentsPage() {
             Manage and track all student admissions
           </p>
         </div>
-        {/* View Toggle */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-gray-100 dark:bg-gray-800">
-          <button
-            onClick={() => setViewMode('table')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-              viewMode === 'table'
-                ? 'bg-white dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-            }`}
-          >
-            <List className="w-4 h-4" />
-            Table
-          </button>
-          <button
-            onClick={() => setViewMode('cards')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-              viewMode === 'cards'
-                ? 'bg-white dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-            Cards
-          </button>
-        </div>
       </div>
 
       {/* Search & Filters */}
@@ -161,21 +140,11 @@ function StudentsPage() {
 
       {/* Content */}
       {loading ? (
-        viewMode === 'table' ? (
-          <div className="glass-card p-4 space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <SkeletonLoader key={i} variant="table-row" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        )
-      ) : viewMode === 'table' ? (
-        <StudentTable students={students} onStatusChange={handleStatusChange} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {students.length > 0 ? (
@@ -183,7 +152,7 @@ function StudentsPage() {
               <StudentCard
                 key={student._id || student.id}
                 student={student}
-                onStatusChange={handleStatusChange}
+                onStatusChange={user?.role?.toLowerCase() === 'volunteer' ? handleStatusChange : undefined}
               />
             ))
           ) : (

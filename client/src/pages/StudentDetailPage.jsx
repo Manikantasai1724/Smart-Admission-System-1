@@ -212,61 +212,63 @@ function StudentDetailPage() {
           <StudentTimeline student={{ ...student, ...statusChanges }} />
 
           {/* Status Update Section */}
-          <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Update Status
-            </h3>
-            <div className="space-y-4">
-              {ADMISSION_STEPS.map((step) => (
-                <div
-                  key={step}
-                  className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 dark:bg-white/[0.02]"
-                >
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {STEP_LABELS[step]}
-                  </span>
-                  <StatusToggle
-                    checked={statusChanges[step]}
-                    onChange={(val) => handleToggle(step, val)}
-                    label={statusChanges[step] ? "Done" : "Pending"}
+          {user?.role?.toLowerCase() === 'volunteer' && (
+            <div className="glass-card p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Update Status
+              </h3>
+              <div className="space-y-4">
+                {ADMISSION_STEPS.map((step) => (
+                  <div
+                    key={step}
+                    className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 dark:bg-white/[0.02]"
+                  >
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {STEP_LABELS[step]}
+                    </span>
+                    <StatusToggle
+                      checked={statusChanges[step]}
+                      onChange={(val) => handleToggle(step, val)}
+                      label={statusChanges[step] ? "Done" : "Pending"}
+                    />
+                  </div>
+                ))}
+
+                {/* Remarks */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    Remarks
+                  </label>
+                  <textarea
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    rows={3}
+                    placeholder="Add any notes or remarks..."
+                    className="glass-input w-full resize-none"
                   />
                 </div>
-              ))}
 
-              {/* Remarks */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Remarks
-                </label>
-                <textarea
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  rows={3}
-                  placeholder="Add any notes or remarks..."
-                  className="glass-input w-full resize-none"
-                />
+                {/* Save Button */}
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="glass-button w-full flex items-center justify-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
               </div>
-
-              {/* Save Button */}
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="glass-button w-full flex items-center justify-center gap-2"
-              >
-                {saving ? (
-                  <>
-                    <Loader className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Save Changes
-                  </>
-                )}
-              </button>
             </div>
-          </div>
+          )}
 
           {/* Audit History */}
           {auditHistory.length > 0 && (

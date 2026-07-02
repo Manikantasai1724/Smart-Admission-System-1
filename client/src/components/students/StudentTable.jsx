@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 function StudentTable({ students = [], onStatusChange, loading = false, sortConfig, onSort }) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const canEdit = user?.role === 'hod' || user?.role === 'volunteer';
+  const canEdit = user?.role?.toLowerCase() === 'volunteer';
 
   const handleSort = (key) => {
     if (onSort) onSort(key);

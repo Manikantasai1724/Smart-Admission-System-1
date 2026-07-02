@@ -11,6 +11,8 @@ import {
   uploadStudents,
   updateStudentStatus,
   deleteStudent,
+  exportStudents,
+  deleteAllStudents,
 } from '../controllers/studentController.js';
 import auth from '../middleware/auth.js';
 import authorize from '../middleware/rbac.js';
@@ -66,6 +68,12 @@ const router = Router();
 router.get('/', auth, getStudents);
 
 /**
+ * GET /api/students/export/all
+ * Export all students without pagination (HOD and Admin).
+ */
+router.get('/export/all', auth, authorize('HOD', 'Admin'), exportStudents);
+
+/**
  * GET /api/students/:id
  * Single student detail (all authenticated users).
  */
@@ -79,9 +87,15 @@ router.post('/upload', auth, authorize('HOD'), upload.single('file'), uploadStud
 
 /**
  * PUT /api/students/:id/status
- * Update admission-step flags (all authenticated users).
+ * Update admission-step flags (Volunteer only).
  */
-router.put('/:id/status', auth, updateStudentStatus);
+router.put('/:id/status', auth, authorize('Volunteer'), updateStudentStatus);
+
+/**
+ * DELETE /api/students/bulk/all
+ * Hard-delete all students (Admin only).
+ */
+router.delete('/bulk/all', auth, authorize('Admin'), deleteAllStudents);
 
 /**
  * DELETE /api/students/:id

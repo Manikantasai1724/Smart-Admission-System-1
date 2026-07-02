@@ -353,3 +353,44 @@ export const deleteStudent = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * GET /api/students/export/all
+ * Fetch all students without pagination.
+ */
+export const exportStudents = async (req, res, next) => {
+  try {
+    const filter = { isActive: true };
+    if (req.query.department) {
+      filter.department = { $regex: `^${req.query.department}$`, $options: "i" };
+    }
+    const students = await Student.find(filter)
+      .sort({ createdAt: -1 })
+      .populate("uploadedBy", "name email")
+      .lean();
+    res.status(200).json({
+      success: true,
+      students,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /api/students/bulk/all
+ * Delete all students from the database.
+ */
+export const deleteAllStudents = async (req, res, next) => {
+  try {
+    await Student.deleteMany({});
+    await AuditLog.deleteMany({}); // optionally clear student audit logs
+    emitDashboardRefresh();
+    res.status(200).json({
+      success: true,
+      message: "All students deleted successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
