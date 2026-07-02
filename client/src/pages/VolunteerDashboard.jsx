@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Search, CheckCircle, Clock, XCircle, User, Ticket } from 'lucide-react';
 import DashboardLayout from '../components/common/DashboardLayout';
 import StatCard from '../components/dashboard/StatCard';
 import StudentCard from '../components/students/StudentCard';
@@ -19,6 +19,7 @@ function VolunteerDashboard() {
   const { addToast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchType, setSearchType] = useState('text'); // 'text' or 'token'
   const [pendingStudents, setPendingStudents] = useState([]);
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,11 @@ function VolunteerDashboard() {
   const [stats, setStats] = useState({ pendingToday: 0, completedToday: 0 });
 
   const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // Clear search term when search type changes
+  useEffect(() => {
+    setSearchTerm('');
+  }, [searchType]);
 
   const fetchStudents = useCallback(async (search = '') => {
     try {
@@ -47,13 +53,25 @@ function VolunteerDashboard() {
         return;
       }
 
-      const params = { limit: 20, status: 'pending', search };
+      const params = { limit: 20, status: 'pending' };
+      if (searchType === 'token') {
+        params.tokenNumber = search;
+      } else {
+        params.search = search;
+      }
+
       const res = await getStudents(params);
       const students = res.data.students || res.data.data || [];
       setPendingStudents(students);
 
       // Fetch recently updated matching search
-      const recentRes = await getStudents({ limit: 10, sort: '-updatedAt', search });
+      const recentParams = { limit: 10, sort: '-updatedAt' };
+      if (searchType === 'token') {
+        recentParams.tokenNumber = search;
+      } else {
+        recentParams.search = search;
+      }
+      const recentRes = await getStudents(recentParams);
       setRecentUpdates(recentRes.data.students || recentRes.data.data || []);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -61,7 +79,7 @@ function VolunteerDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, searchType]);
 
   useEffect(() => {
     fetchStudents(debouncedSearch);
@@ -115,16 +133,44 @@ function VolunteerDashboard() {
         </p>
       </div>
 
-      {/* Prominent Search Bar */}
-      <div className="relative max-w-2xl mx-auto mb-8">
-        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search students by name or hall ticket number..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-white/80 dark:bg-primary-950/50 backdrop-blur-xl border-2 border-gray-200/60 dark:border-primary-400/15 rounded-2xl pl-14 pr-6 py-4 text-lg outline-none transition-all duration-300 focus:border-primary-400 focus:ring-4 focus:ring-primary-400/10 dark:focus:ring-primary-400/20 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 shadow-lg shadow-black/5"
-        />
+      {/* Prominent Search Bar & Filter Toggle Buttons */}
+      <div className="flex flex-col sm:flex-row items-center gap-3 max-w-2xl mx-auto mb-8">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
+          <input
+            type="text"
+            placeholder={searchType === 'token' ? "Search by Token number (e.g. 5)..." : "Search by name or hall ticket number..."}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-white/80 dark:bg-primary-950/50 backdrop-blur-xl border-2 border-gray-200/60 dark:border-primary-400/15 rounded-2xl pl-14 pr-6 py-4 text-lg outline-none transition-all duration-300 focus:border-primary-400 focus:ring-4 focus:ring-primary-400/10 dark:focus:ring-primary-400/20 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 shadow-lg shadow-black/5"
+          />
+        </div>
+        
+        {/* Toggle Buttons styled like outline 'Filters' button */}
+        <div className="flex items-center gap-2 self-end sm:self-center">
+          <button
+            onClick={() => setSearchType('text')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+              searchType === 'text'
+                ? 'bg-primary-500/10 border-primary-500 text-primary-600 dark:text-primary-400 shadow-sm'
+                : 'bg-white dark:bg-primary-950/20 border-gray-300 dark:border-primary-400/15 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+            }`}
+          >
+            <User className="w-4.5 h-4.5" />
+            General Info
+          </button>
+          <button
+            onClick={() => setSearchType('token')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+              searchType === 'token'
+                ? 'bg-purple-500/10 border-purple-500 text-purple-600 dark:text-purple-400 shadow-sm'
+                : 'bg-white dark:bg-primary-950/20 border-gray-300 dark:border-primary-400/15 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+            }`}
+          >
+            <Ticket className="w-4.5 h-4.5" />
+            Token Number
+          </button>
+        </div>
       </div>
 
       {/* Quick Stats */}
@@ -148,7 +194,9 @@ function VolunteerDashboard() {
           <Search className="w-12 h-12 text-gray-400 mx-auto mb-3 animate-pulse" />
           <p className="text-gray-700 dark:text-gray-300 font-semibold text-lg">Search for a Student</p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">
-            Enter a student name or hall ticket number in the search bar above to view and manage their status.
+            {searchType === 'token'
+              ? 'Enter a daily sequence token number in the search bar above to view and manage status.'
+              : 'Enter a student name or hall ticket number in the search bar above to view and manage status.'}
           </p>
         </div>
       ) : loading ? (

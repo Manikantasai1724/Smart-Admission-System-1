@@ -147,9 +147,16 @@ function StudentDetailPage() {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 {student.name}
               </h2>
-              <span className="inline-flex px-3 py-1 rounded-full bg-primary-50 dark:bg-primary-900/20 text-sm font-semibold text-primary-600 dark:text-primary-400 mt-2">
-                {student.department}
-              </span>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <span className="inline-flex px-3 py-1 rounded-full bg-primary-50 dark:bg-primary-900/20 text-sm font-semibold text-primary-600 dark:text-primary-400">
+                  {student.department}
+                </span>
+                {student.tokenNumber && (
+                  <span className="inline-flex px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-sm font-bold text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30 shadow-sm">
+                    Token #{student.tokenNumber}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Info Grid */}
@@ -176,6 +183,18 @@ function StudentDetailPage() {
                 label="Parent Name"
                 value={student.parentName}
               />
+              <InfoRow
+                icon={Phone}
+                label="Parent Phone"
+                value={student.parentPhone}
+              />
+              {student.tokenNumber && (
+                <InfoRow
+                  icon={Hash}
+                  label="Token Number"
+                  value={`#${student.tokenNumber}`}
+                />
+              )}
               <InfoRow
                 icon={Building}
                 label="Address"

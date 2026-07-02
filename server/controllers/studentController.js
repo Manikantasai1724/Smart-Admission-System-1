@@ -5,6 +5,7 @@
 import fs from "fs";
 import Student from "../models/Student.js";
 import AuditLog from "../models/AuditLog.js";
+import DailyCounter from "../models/DailyCounter.js";
 import { parseFile } from "../services/fileParser.js";
 import { bulkInsertStudents } from "../services/studentService.js";
 import {
@@ -113,6 +114,14 @@ export const getStudents = async (req, res, next) => {
         { parentPhone: phoneRegex },
         ...(filter.$or || []),
       ];
+    }
+
+    // Token number filter
+    if (req.query.tokenNumber) {
+      const tokenNum = parseInt(req.query.tokenNumber, 10);
+      if (!Number.isNaN(tokenNum)) {
+        filter.tokenNumber = tokenNum;
+      }
     }
 
     // Text / regex search
@@ -389,6 +398,90 @@ export const deleteAllStudents = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "All students deleted successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/students/:id/generate-token
+ * Generate a daily resetting token number for a student and update phone numbers.
+ */
+export const generateStudentToken = async (req, res, next) => {
+  try {
+    const { phone, parentPhone } = req.body;
+
+    if (!phone || !parentPhone) {
+      return res.status(400).json({
+        success: false,
+        message: "Both student and parent phone numbers are required.",
+      });
+    }
+
+    const student = await Student.findById(req.params.id);
+    if (!student || !student.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    // Capture old values for audit
+    const oldValue = {
+      phone: student.phone,
+      parentPhone: student.parentPhone,
+      tokenNumber: student.tokenNumber,
+      tokenGeneratedAt: student.tokenGeneratedAt,
+    };
+
+    // Calculate calendar date local format (YYYY-MM-DD)
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    // Atomically find and increment/create sequence
+    const counter = await DailyCounter.findOneAndUpdate(
+      { date: dateStr },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
+    const tokenNumber = counter.seq;
+
+    // Apply updates
+    student.phone = phone;
+    student.parentPhone = parentPhone;
+    student.tokenNumber = tokenNumber;
+    student.tokenGeneratedAt = new Date();
+
+    await student.save();
+
+    const newValue = {
+      phone: student.phone,
+      parentPhone: student.parentPhone,
+      tokenNumber: student.tokenNumber,
+      tokenGeneratedAt: student.tokenGeneratedAt,
+    };
+
+    // Audit log
+    const auditLog = await AuditLog.create({
+      studentId: student._id,
+      updatedBy: req.user.id,
+      role: req.user.role,
+      action: "TOKEN_GENERATED",
+      oldValue,
+      newValue,
+    });
+
+    // Real-time events
+    emitStudentUpdate(student.toObject());
+    emitDashboardRefresh();
+    emitNewActivity(auditLog.toObject());
+
+    res.status(200).json({
+      success: true,
+      message: `Token #${tokenNumber} generated successfully.`,
+      student,
     });
   } catch (error) {
     next(error);

@@ -61,6 +61,14 @@ const studentSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    tokenNumber: {
+      type: Number,
+      default: null,
+    },
+    tokenGeneratedAt: {
+      type: Date,
+      default: null,
+    },
 
     // ── Admission step flags ──────────────────────────────────────────
     selfReported: {

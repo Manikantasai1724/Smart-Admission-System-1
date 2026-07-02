@@ -13,6 +13,7 @@ import {
   deleteStudent,
   exportStudents,
   deleteAllStudents,
+  generateStudentToken,
 } from '../controllers/studentController.js';
 import auth from '../middleware/auth.js';
 import authorize from '../middleware/rbac.js';
@@ -90,6 +91,12 @@ router.post('/upload', auth, authorize('HOD'), upload.single('file'), uploadStud
  * Update admission-step flags (Volunteer only).
  */
 router.put('/:id/status', auth, authorize('Volunteer'), updateStudentStatus);
+
+/**
+ * POST /api/students/:id/generate-token
+ * Generate a token number (Volunteer only).
+ */
+router.post('/:id/generate-token', auth, authorize('Volunteer'), generateStudentToken);
 
 /**
  * DELETE /api/students/bulk/all

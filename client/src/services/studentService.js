@@ -31,4 +31,8 @@ export const exportStudents = (params = {}) => {
   return api.get('/students/export/all', { params });
 };
 
-export default { getStudents, getStudentById, uploadStudents, updateStudentStatus, deleteStudent, deleteAllStudents, exportStudents };
+export const generateStudentToken = (id, data) => {
+  return api.post(`/students/${id}/generate-token`, data);
+};
+
+export default { getStudents, getStudentById, uploadStudents, updateStudentStatus, deleteStudent, deleteAllStudents, exportStudents, generateStudentToken };
