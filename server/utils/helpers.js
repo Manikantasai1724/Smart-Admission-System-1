@@ -40,7 +40,15 @@ export const buildSearchQuery = (query) => {
     return {};
   }
 
-  const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const trimmed = query.trim();
+  const numericValue = Number(trimmed);
+
+  // If the query is a positive integer, search only for the rank field exactly matching the numeric value.
+  if (trimmed !== "" && !Number.isNaN(numericValue) && /^\d+$/.test(trimmed)) {
+    return { rank: numericValue };
+  }
+
+  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const regex = new RegExp(escaped, "i");
 
   const conditions = [
@@ -50,12 +58,6 @@ export const buildSearchQuery = (query) => {
     { parentPhone: regex },
     { email: regex },
   ];
-
-  // If the query looks numeric, also search by rank
-  const numericValue = Number(query.trim());
-  if (!Number.isNaN(numericValue)) {
-    conditions.push({ rank: numericValue });
-  }
 
   return { $or: conditions };
 };

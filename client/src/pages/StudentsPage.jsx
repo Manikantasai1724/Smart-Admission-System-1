@@ -27,6 +27,9 @@ function StudentsPage() {
     search: '',
     department: '',
     status: 'all',
+    rankMin: '',
+    rankMax: '',
+    phone: '',
   });
 
   const fetchStudents = useCallback(async (params = {}) => {
@@ -41,6 +44,9 @@ function StudentsPage() {
       if (queryParams.status === 'all') delete queryParams.status;
       if (!queryParams.department) delete queryParams.department;
       if (!queryParams.search) delete queryParams.search;
+      if (!queryParams.rankMin) delete queryParams.rankMin;
+      if (!queryParams.rankMax) delete queryParams.rankMax;
+      if (!queryParams.phone) delete queryParams.phone;
 
       const res = await getStudents(queryParams);
       const data = res.data;
@@ -89,8 +95,8 @@ function StudentsPage() {
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  const handleFilter = ({ department, status }) => {
-    setFilters(prev => ({ ...prev, department, status }));
+  const handleFilter = (filterParams) => {
+    setFilters(prev => ({ ...prev, ...filterParams }));
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 

@@ -133,7 +133,9 @@ export const getStudents = async (req, res, next) => {
     const searchQuery = req.query.search || req.query.query;
     if (searchQuery) {
       const searchFilter = buildSearchQuery(searchQuery);
-      if (searchFilter.$or) {
+      if (searchFilter.rank !== undefined) {
+        filter.rank = searchFilter.rank;
+      } else if (searchFilter.$or) {
         filter.$or = searchFilter.$or;
       }
     }

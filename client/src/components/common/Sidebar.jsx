@@ -15,7 +15,6 @@ import { useAuth } from '../../context/AuthContext';
 const HOD_LINKS = [
   { to: '/hod/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/students', label: 'Students', icon: Users },
-  { to: '/hod/audit-logs', label: 'Audit Logs', icon: History },
 ];
 
 const VOLUNTEER_LINKS = [

@@ -12,7 +12,6 @@ import HodDashboard from "./pages/HodDashboard";
 import VolunteerDashboard from "./pages/VolunteerDashboard";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
-import AuditLogsPage from "./pages/AuditLogsPage";
 import StudentsPage from "./pages/StudentsPage";
 import StudentDetailPage from "./pages/StudentDetailPage";
 import UploadPage from "./pages/UploadPage";
@@ -46,14 +45,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/hod/audit-logs"
-                element={
-                  <ProtectedRoute allowedRoles={["hod"]}>
-                    <AuditLogsPage />
-                  </ProtectedRoute>
-                }
-              />
+
               <Route
                 path="/volunteer/dashboard"
                 element={
