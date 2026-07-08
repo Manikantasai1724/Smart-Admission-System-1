@@ -1,36 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
-function AnimatedCounter({ end, duration = 1500 }) {
-  const [count, setCount] = useState(0);
-  const countRef = useRef(null);
-
-  useEffect(() => {
-    if (end === 0 || end === undefined) {
-      setCount(0);
-      return;
-    }
-
-    let startTime = null;
-    const startVal = 0;
-
-    const step = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(startVal + (end - startVal) * easeOut));
-      if (progress < 1) {
-        countRef.current = requestAnimationFrame(step);
-      }
-    };
-
-    countRef.current = requestAnimationFrame(step);
-    return () => {
-      if (countRef.current) cancelAnimationFrame(countRef.current);
-    };
-  }, [end, duration]);
-
-  return <span>{count.toLocaleString()}</span>;
+function AnimatedCounter({ end }) {
+  return <span>{end.toLocaleString()}</span>;
 }
 
 function StatCard({ title, value, icon: Icon, trend, trendValue, color = 'primary', delay = 0 }) {

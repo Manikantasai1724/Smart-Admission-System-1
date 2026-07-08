@@ -156,6 +156,24 @@ function HodDashboard() {
     ? departmentData.filter(d => d.department === selectedDepartment || d.name === selectedDepartment)
     : departmentData;
 
+  const getExportFilename = (baseName) => {
+    let name = baseName;
+    if (selectedDepartment) {
+      name += `_${selectedDepartment.toLowerCase()}`;
+    }
+    if (selectedDay) {
+      name += `_day_${selectedDay}`;
+    }
+    return name;
+  };
+
+  const getExportTitle = (baseTitle) => {
+    const filters = [];
+    if (selectedDepartment) filters.push(selectedDepartment);
+    if (selectedDay) filters.push(`Day ${selectedDay}`);
+    return filters.length > 0 ? `${baseTitle} (${filters.join(' - ')})` : baseTitle;
+  };
+
   const handleExportExcel = async () => {
     try {
       addToast('info', 'Preparing Excel export...');
@@ -195,7 +213,7 @@ function HodDashboard() {
         };
       });
 
-      exportToExcel(data, 'students-admission-report');
+      exportToExcel(data, getExportFilename('students-admission-report'));
       addToast('success', 'Excel report downloaded successfully');
     } catch (error) {
       console.error('Export error:', error);
@@ -249,7 +267,12 @@ function HodDashboard() {
         { key: 'Status', header: 'Status' },
       ];
 
-      exportToPDF(data, columns, 'Students Admission Report');
+      exportToPDF(
+        data,
+        columns,
+        getExportTitle('Students Admission Report'),
+        getExportFilename('students_admission_report')
+      );
       addToast('success', 'PDF report downloaded successfully');
     } catch (error) {
       console.error('Export error:', error);

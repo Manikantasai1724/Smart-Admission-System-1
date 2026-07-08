@@ -121,6 +121,14 @@ function StudentsPage() {
     }
   };
 
+  const handleTokenGenerated = (studentId, updatedStudent) => {
+    setStudents(prev =>
+      prev.map(s =>
+        (s._id === studentId || s.id === studentId) ? { ...s, ...updatedStudent } : s
+      )
+    );
+  };
+
   return (
     <DashboardLayout>
       {/* Header */}
@@ -153,6 +161,7 @@ function StudentsPage() {
                 key={student._id || student.id}
                 student={student}
                 onStatusChange={user?.role?.toLowerCase() === 'volunteer' ? handleStatusChange : undefined}
+                onTokenGenerated={handleTokenGenerated}
               />
             ))
           ) : (

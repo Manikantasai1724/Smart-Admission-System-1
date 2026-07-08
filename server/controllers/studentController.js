@@ -443,9 +443,12 @@ export const generateStudentToken = async (req, res, next) => {
       tokenGeneratedAt: student.tokenGeneratedAt,
     };
 
-    // Atomically find and increment/create global sequence
+    // Get current date in YYYY-MM-DD format (IST / India Timezone)
+    const todayStr = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Kolkata' }).split(' ')[0];
+
+    // Atomically find and increment/create daily sequence
     const counter = await DailyCounter.findOneAndUpdate(
-      { date: "global" },
+      { date: todayStr },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );

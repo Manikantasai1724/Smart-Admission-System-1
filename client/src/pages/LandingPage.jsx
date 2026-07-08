@@ -11,10 +11,8 @@ function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
 
-  // Control splash screen on first load / page refresh
-  const [showSplash, setShowSplash] = React.useState(() => {
-    return !hasRunSplash;
-  });
+  // Control splash screen on first load / page refresh (Disabled)
+  const [showSplash, setShowSplash] = React.useState(false);
   const [fadeSplash, setFadeSplash] = React.useState(false);
 
   React.useEffect(() => {
@@ -26,25 +24,6 @@ function LandingPage() {
       }
     }
   }, [isAuthenticated, user, navigate]);
-
-  React.useEffect(() => {
-    if (showSplash) {
-      // Start fading out splash screen shortly before removing it
-      const fadeTimer = setTimeout(() => {
-        setFadeSplash(true);
-      }, 3100);
-
-      const removeTimer = setTimeout(() => {
-        setShowSplash(false);
-        hasRunSplash = true;
-      }, 3800);
-
-      return () => {
-        clearTimeout(fadeTimer);
-        clearTimeout(removeTimer);
-      };
-    }
-  }, [showSplash]);
 
   return (
     <div className="login-bg min-h-screen flex items-center justify-center p-4 relative overflow-hidden">

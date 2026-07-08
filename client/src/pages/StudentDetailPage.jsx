@@ -382,19 +382,19 @@ function InfoRow({ icon: Icon, label, value, highlight }) {
   }
 
   return (
-    <div className={`flex items-center gap-3 text-sm p-1.5 rounded-lg transition-colors ${highlightClass}`}>
-      <Icon className={`w-4 h-4 flex-shrink-0 ${iconClass}`} />
+    <div className={`flex flex-wrap sm:flex-nowrap items-start sm:items-center gap-2 sm:gap-3 text-sm p-2.5 rounded-lg ${highlightClass}`}>
+      <Icon className={`w-4 h-4 mt-0.5 sm:mt-0 flex-shrink-0 ${iconClass}`} />
       <span className={`w-24 flex-shrink-0 ${labelClass}`}>
         {label}
       </span>
-      <span className={`font-semibold truncate ${valueClass}`}>
+      <span className={`font-semibold break-words flex-1 min-w-0 ${valueClass}`}>
         {value}
       </span>
       {highlight === "green" && (
         <a
           href={`tel:${value}`}
           onClick={(e) => e.stopPropagation()}
-          className="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm shadow-emerald-500/25 transition-all duration-200"
+          className="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm shadow-emerald-500/25 flex-shrink-0"
           title={`Call ${value}`}
         >
           <Phone className="w-3.5 h-3.5" />

@@ -102,7 +102,59 @@ function AuditLogsPage() {
         </div>
       </div>
 
-      <div className="glass-card rounded-2xl overflow-hidden border border-white/20 dark:border-primary-400/10 flex flex-col min-h-[500px]">
+      {/* Mobile Card Layout (Visible on small screens) */}
+      <div className="block md:hidden space-y-4 mb-4">
+        {loading ? (
+          <div className="glass-card p-12 text-center">
+            <Loader className="w-6 h-6 animate-spin text-primary-500 mx-auto" />
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="glass-card p-12 text-center text-gray-500">
+            No activity found
+          </div>
+        ) : (
+          logs.map((log) => (
+            <div key={log._id} className="glass-card p-4 space-y-3 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+              <div className="flex justify-between items-center text-xs text-gray-500">
+                <span>
+                  {new Date(log.timestamp).toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </span>
+                <span className="text-[10px] uppercase font-bold text-gray-400">
+                  {log.updatedBy?.role || "System"}
+                </span>
+              </div>
+
+              <div className="border-t border-b border-gray-100 dark:border-primary-400/5 py-2">
+                <div className="font-semibold text-sm text-gray-800 dark:text-white">
+                  {log.studentId?.name || "Unknown Student"}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  {log.studentId?.hallTicketNumber || "—"} • {log.studentId?.department || "—"}
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                {renderAction(log)}
+              </div>
+
+              <div className="text-xs text-gray-500 pt-1">
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  By: {log.updatedBy?.name || "Unknown"}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table Layout (Visible on larger screens) */}
+      <div className="hidden md:flex glass-card rounded-2xl overflow-hidden border border-white/20 dark:border-primary-400/10 flex-col min-h-[500px]">
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400">
             <thead className="text-xs uppercase bg-gray-50/50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 border-b border-gray-200/50 dark:border-gray-700/50 whitespace-nowrap">

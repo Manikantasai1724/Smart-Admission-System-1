@@ -21,7 +21,13 @@ export function SocketProvider({ children }) {
       return;
     }
 
-    const socketUrl = import.meta.env.VITE_SOCKET_URL || '';
+    let socketUrl = import.meta.env.VITE_SOCKET_URL;
+    if (!socketUrl && import.meta.env.VITE_API_URL) {
+      // Derive socket url by stripping trailing /api from the REST API base url
+      socketUrl = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
+    }
+    socketUrl = socketUrl || '';
+    
     const newSocket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],

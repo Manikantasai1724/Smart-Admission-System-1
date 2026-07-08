@@ -8,23 +8,16 @@ function ProgressRing({
   secondaryColor = '#e2e8f0',
   className = '',
   showLabel = true,
-  animated = true,
+  animated = false,
 }) {
-  const [animatedPercentage, setAnimatedPercentage] = useState(0);
+  const [animatedPercentage, setAnimatedPercentage] = useState(percentage);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (animatedPercentage / 100) * circumference;
 
   useEffect(() => {
-    if (!animated) {
-      setAnimatedPercentage(percentage);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setAnimatedPercentage(percentage);
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [percentage, animated]);
+    setAnimatedPercentage(percentage);
+  }, [percentage]);
 
   const getColor = () => {
     if (typeof color === 'string') return color;
@@ -53,7 +46,6 @@ function ProgressRing({
           strokeWidth={strokeWidth}
           className="dark:opacity-20"
         />
-        {/* Progress circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -64,7 +56,7 @@ function ProgressRing({
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          className="transition-all duration-1000 ease-out"
+          className="transition-none"
         />
       </svg>
       {showLabel && (

@@ -84,7 +84,7 @@ export async function exportToExcel(data, filename = 'export') {
   saveAs(blob, `${filename}.xlsx`);
 }
 
-export async function exportToPDF(data, columns, title = 'Report') {
+export async function exportToPDF(data, columns, title = 'Report', filename = '') {
   const { default: jsPDF } = await import('jspdf');
   await import('jspdf-autotable');
   const doc = new jsPDF();
@@ -128,7 +128,8 @@ export async function exportToPDF(data, columns, title = 'Report') {
     },
   });
 
-  doc.save(`${title.toLowerCase().replace(/\s+/g, '_')}.pdf`);
+  const pdfFilename = filename || title.toLowerCase().replace(/\s+/g, '_');
+  doc.save(`${pdfFilename}.pdf`);
 }
 
 /**

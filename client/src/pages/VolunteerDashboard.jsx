@@ -121,6 +121,19 @@ function VolunteerDashboard() {
     }
   };
 
+  const handleTokenGenerated = (studentId, updatedStudent) => {
+    setPendingStudents(prev =>
+      prev.map(s =>
+        (s._id === studentId || s.id === studentId) ? { ...s, ...updatedStudent } : s
+      )
+    );
+    setRecentUpdates(prev =>
+      prev.map(s =>
+        (s._id === studentId || s.id === studentId) ? { ...s, ...updatedStudent } : s
+      )
+    );
+  };
+
   return (
     <DashboardLayout>
       {/* Header */}
@@ -216,6 +229,7 @@ function VolunteerDashboard() {
                     key={student._id || student.id}
                     student={student}
                     onStatusChange={handleStatusChange}
+                    onTokenGenerated={handleTokenGenerated}
                   />
                 ))}
               </div>
@@ -243,6 +257,7 @@ function VolunteerDashboard() {
                     key={student._id || student.id}
                     student={student}
                     onStatusChange={handleStatusChange}
+                    onTokenGenerated={handleTokenGenerated}
                   />
                 ))}
               </div>

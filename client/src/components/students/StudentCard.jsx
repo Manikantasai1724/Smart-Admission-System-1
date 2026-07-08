@@ -9,7 +9,7 @@ import StatusToggle from './StatusToggle';
 import { calculateCompletionPercentage, formatDate } from '../../utils/helpers';
 import { STEP_LABELS, ADMISSION_STEPS } from '../../utils/constants';
 
-function StudentCard({ student, onStatusChange, showActions = true }) {
+function StudentCard({ student, onStatusChange, onTokenGenerated, showActions = true }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addToast } = useToast();
@@ -51,7 +51,9 @@ function StudentCard({ student, onStatusChange, showActions = true }) {
       addToast('success', res.data.message || 'Token generated successfully');
       
       // Update local state in the list immediately for smooth UX
-      if (onStatusChange) {
+      if (onTokenGenerated) {
+        onTokenGenerated(student._id || student.id, res.data.student);
+      } else if (onStatusChange) {
         onStatusChange(student._id || student.id, {
           phone: res.data.student.phone,
           parentPhone: res.data.student.parentPhone,
@@ -163,7 +165,7 @@ function StudentCard({ student, onStatusChange, showActions = true }) {
           )}
           <button
             onClick={() => navigate(`/students/${student._id || student.id}`)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors opacity-0 group-hover:opacity-100"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
           >
             <Eye className="w-3.5 h-3.5" />
             Details
