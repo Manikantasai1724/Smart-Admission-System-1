@@ -4,8 +4,8 @@ export const getStats = (params = {}) => {
   return api.get('/dashboard/stats', { params });
 };
 
-export const getDepartmentProgress = () => {
-  return api.get('/dashboard/department-progress');
+export const getDepartmentProgress = (params = {}) => {
+  return api.get('/dashboard/department-progress', { params });
 };
 
 export default { getStats, getDepartmentProgress };

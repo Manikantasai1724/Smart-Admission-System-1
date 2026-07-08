@@ -30,6 +30,7 @@ import studentRoutes from './routes/studentRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import logRoutes from './routes/logRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import settingsRoutes from './routes/settingsRoutes.js';
 
 // ── Ensure uploads directory exists ──────────────────────────────────────────
 if (!fs.existsSync('uploads')) {
@@ -69,6 +70,7 @@ app.use('/api/students', studentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {

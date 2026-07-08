@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, CheckCircle, Clock, Download, FileSpreadsheet, FileText } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Users, CheckCircle, Clock, Download, FileSpreadsheet, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import DashboardLayout from '../components/common/DashboardLayout';
 import StatCard from '../components/dashboard/StatCard';
-import TrendChart from '../components/dashboard/TrendChart';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import { useAuth } from '../context/AuthContext';
@@ -11,21 +9,10 @@ import { useSocket } from '../context/SocketContext';
 import { useToast } from '../context/ToastContext';
 import { getStats, getDepartmentProgress } from '../services/dashboardService';
 import studentService from '../services/studentService';
+import * as settingsService from '../services/settingsService';
 import { getGreeting, exportToExcel, exportToPDF, formatDate } from '../utils/helpers';
 import { DEPARTMENTS } from '../utils/constants';
-
-const PIE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
-
-const CustomPieTooltip = ({ active, payload }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="glass dark:glass-dark rounded-xl p-3 shadow-xl border border-white/20 dark:border-primary-400/10">
-      <p className="text-sm font-semibold text-gray-900 dark:text-white">
-        {payload[0].name}: {payload[0].value}
-      </p>
-    </div>
-  );
-};
+import StudentTable from '../components/students/StudentTable';
 
 function HodDashboard() {
   const { user } = useAuth();
@@ -37,14 +24,40 @@ function HodDashboard() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedDay, setSelectedDay] = useState('');
+  const [counselingDays, setCounselingDays] = useState(3);
+
+  // Student list states
+  const [students, setStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'completed', 'all'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await settingsService.getSettings();
+        if (res.data?.settings?.counselingDurationDays) {
+          setCounselingDays(Number(res.data.settings.counselingDurationDays));
+        }
+      } catch (err) {
+        console.error('Failed to load settings', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      const params = selectedDepartment ? { department: selectedDepartment } : {};
+      const params = {};
+      if (selectedDepartment) params.department = selectedDepartment;
+      if (selectedDay) params.phase = selectedDay;
+
       const [statsRes, deptRes] = await Promise.all([
         getStats(params),
-        getDepartmentProgress(),
+        getDepartmentProgress(selectedDay ? { phase: selectedDay } : {}),
       ]);
       setStats(statsRes.data.stats || statsRes.data);
       const allDepts = deptRes.data.departments || deptRes.data || [];
@@ -61,11 +74,45 @@ function HodDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [addToast, selectedDepartment]);
+  }, [addToast, selectedDepartment, selectedDay]);
+
+  const fetchStudentsList = useCallback(async () => {
+    try {
+      setStudentsLoading(true);
+      const params = {
+        page: currentPage,
+        limit: 10,
+        status: activeTab === 'all' ? undefined : activeTab,
+      };
+      if (selectedDepartment) params.department = selectedDepartment;
+      if (selectedDay) params.phase = selectedDay;
+
+      const res = await studentService.getStudents(params);
+      setStudents(res.data.students || []);
+      setTotalPages(res.data.pagination?.pages || 1);
+    } catch (error) {
+      console.error('Error fetching students list:', error);
+    } finally {
+      setStudentsLoading(false);
+    }
+  }, [selectedDepartment, selectedDay, activeTab, currentPage]);
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  useEffect(() => {
+    fetchStudentsList();
+  }, [fetchStudentsList]);
+
+  // Reset page to 1 on filter/tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedDepartment, selectedDay, activeTab]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   // Socket.IO listeners for real-time updates
   useEffect(() => {
@@ -73,6 +120,7 @@ function HodDashboard() {
 
     const handleStudentUpdated = () => {
       fetchDashboardData();
+      fetchStudentsList();
     };
 
     const handleNewActivity = (activity) => {
@@ -86,7 +134,7 @@ function HodDashboard() {
       socket.off('student:updated', handleStudentUpdated);
       socket.off('activity:new', handleNewActivity);
     };
-  }, [socket, fetchDashboardData]);
+  }, [socket, fetchDashboardData, fetchStudentsList]);
 
   const totalStudents = stats?.total || stats?.totalStudents || 0;
   const completed = stats?.completed || stats?.completedStudents || 0;
@@ -111,7 +159,9 @@ function HodDashboard() {
   const handleExportExcel = async () => {
     try {
       addToast('info', 'Preparing Excel export...');
-      const params = selectedDepartment ? { department: selectedDepartment } : {};
+      const params = {};
+      if (selectedDepartment) params.department = selectedDepartment;
+      if (selectedDay) params.phase = selectedDay;
       const res = await studentService.exportStudents(params);
       const students = res.data.students || [];
 
@@ -156,7 +206,9 @@ function HodDashboard() {
   const handleExportPDF = async () => {
     try {
       addToast('info', 'Preparing PDF export...');
-      const params = selectedDepartment ? { department: selectedDepartment } : {};
+      const params = {};
+      if (selectedDepartment) params.department = selectedDepartment;
+      if (selectedDay) params.phase = selectedDay;
       const res = await studentService.exportStudents(params);
       const students = res.data.students || [];
 
@@ -218,17 +270,6 @@ function HodDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Department Filter */}
-          <select
-            value={selectedDepartment}
-            onChange={(e) => setSelectedDepartment(e.target.value)}
-            className="glass-input text-sm py-2"
-          >
-            <option value="">All Departments</option>
-            {DEPARTMENTS.map(dept => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
           {/* Export Buttons */}
           <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
             <FileSpreadsheet className="w-4 h-4" />
@@ -241,22 +282,79 @@ function HodDashboard() {
         </div>
       </div>
 
+      {/* Dashboard Filters Bar */}
+      <div className="glass-card p-4 mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-semibold text-xs uppercase tracking-wider">
+          <svg className="w-4 h-4 text-primary-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V17a1 1 0 01-.293.707l-2 2A1 1 0 018 19v-7.586L3.293 7.707A1 1 0 013 7V4z" />
+          </svg>
+          Dashboard Filters
+        </div>
+        <div className="flex flex-col sm:flex-row flex-wrap items-center gap-4">
+          {/* Branch Filter Button Group */}
+          <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5">
+            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Branch</span>
+            {['ALL', 'CSE', 'AIML', 'CIC'].map((branch) => {
+              const isActive = (branch === 'ALL' && selectedDepartment === '') || (selectedDepartment === branch);
+              return (
+                <button
+                  key={branch}
+                  onClick={() => setSelectedDepartment(branch === 'ALL' ? '' : branch)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+                    isActive
+                      ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 scale-[1.02]'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  {branch}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Counseling Day Filter Button Group */}
+          <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5">
+            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Counseling</span>
+            {(() => {
+              const dayFilters = ['ALL DAYS'];
+              for (let i = 1; i <= counselingDays; i++) {
+                dayFilters.push(`DAY ${i}`);
+              }
+              return dayFilters.map((day) => {
+                const val = day === 'ALL DAYS' ? '' : day.replace('DAY ', '');
+                const isActive = selectedDay === val;
+                return (
+                  <button
+                    key={day}
+                    onClick={() => setSelectedDay(val)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+                      isActive
+                        ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 scale-[1.02]'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    {day}
+                  </button>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      </div>
+
       {loading ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {Array.from({ length: 2 }).map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
               <SkeletonLoader key={i} variant="stat-card" />
             ))}
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <SkeletonLoader variant="card" className="lg:col-span-3 h-96" />
-            <SkeletonLoader variant="card" className="lg:col-span-2 h-96" />
-          </div>
+          <SkeletonLoader variant="card" className="h-96" />
         </div>
       ) : (
         <div className="space-y-6 stagger-children">
           {/* Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard
               title="Total Students"
               value={totalStudents}
@@ -265,134 +363,116 @@ function HodDashboard() {
               delay={0}
             />
             <StatCard
+              title="Pending"
+              value={pending}
+              icon={Clock}
+              color="warning"
+              delay={100}
+            />
+            <StatCard
               title="Completed"
               value={completed}
               icon={CheckCircle}
               color="success"
-              delay={100}
+              delay={200}
             />
           </div>
 
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Overall Completion Chart */}
-            <div className="glass-card p-6 flex flex-col justify-between min-h-[360px]">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Overall Progress
-              </h3>
-              <div className="flex-1 flex flex-col items-center justify-center">
-                {pieData.length > 0 ? (
-                  <div className="w-full h-44 relative">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={55}
-                          outerRadius={75}
-                          paddingAngle={4}
-                          dataKey="value"
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell 
-                              key={`cell-${index}`} 
-                              fill={entry.name === 'Completed' ? '#10b981' : '#f59e0b'} 
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomPieTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-2xl font-extrabold text-gray-800 dark:text-white">{completionRate}%</span>
-                      <span className="text-[10px] text-gray-400 font-semibold uppercase">Done</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-400">No data available</p>
-                )}
-                
-                <div className="mt-4 space-y-2 w-full px-4">
-                  <div className="flex items-center justify-between text-xs font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
-                      <span className="text-gray-500 dark:text-gray-400">Completed</span>
-                    </div>
-                    <span className="text-gray-800 dark:text-gray-200">{completed} ({totalStudents > 0 ? Math.round((completed / totalStudents) * 100) : 0}%)</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-                      <span className="text-gray-500 dark:text-gray-400">Pending</span>
-                    </div>
-                    <span className="text-gray-800 dark:text-gray-200">{pending > 0 ? pending : 0} ({totalStudents > 0 ? Math.round((pending / totalStudents) * 100) : 0}%)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Today's Progress Chart */}
-            <div className="glass-card p-6 flex flex-col justify-between min-h-[360px]">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Today's Activity
-              </h3>
-              <div className="flex-1 flex flex-col items-center justify-center">
-                {todayPieData.length > 0 ? (
-                  <div className="w-full h-44 relative">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={todayPieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={55}
-                          outerRadius={75}
-                          paddingAngle={4}
-                          dataKey="value"
-                        >
-                          {todayPieData.map((entry, index) => (
-                            <Cell 
-                              key={`cell-${index}`} 
-                              fill={entry.name.startsWith('Completed') ? '#10b981' : '#f59e0b'} 
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomPieTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-2xl font-extrabold text-gray-800 dark:text-white">
-                        {completedToday}
-                      </span>
-                      <span className="text-[10px] text-gray-400 font-semibold uppercase">Today</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-400">No data completed today</p>
-                )}
-                
-                <div className="mt-4 space-y-2 w-full px-4">
-                  <div className="flex items-center justify-between text-xs font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
-                      <span className="text-gray-500 dark:text-gray-400">Completed Today</span>
-                    </div>
-                    <span className="text-gray-800 dark:text-gray-200">{completedToday}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-                      <span className="text-gray-500 dark:text-gray-400">Remaining Pending</span>
-                    </div>
-                    <span className="text-gray-800 dark:text-gray-200">{pending > 0 ? pending : 0}</span>
-                  </div>
-                </div>
-              </div>
+          {/* All / Pending / Completed Tabs Selector */}
+          <div className="flex items-center justify-between border-b border-gray-200/50 dark:border-primary-400/10 pb-1">
+            <div className="flex gap-6">
+              {[
+                { id: 'all', name: 'All Students', count: totalStudents },
+                { id: 'pending', name: 'Pending', count: pending },
+                { id: 'completed', name: 'Completed', count: completed }
+              ].map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`relative pb-3 text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 px-1 ${
+                      isActive
+                        ? 'text-primary-600 dark:text-primary-400 font-bold'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    <span>{tab.name}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                      isActive
+                        ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                        : 'bg-gray-100 dark:bg-primary-950 text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {tab.count}
+                    </span>
+                    {isActive && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500 rounded-full animate-fade-in" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
+          {/* Students Table */}
+          <StudentTable
+            students={students}
+            loading={studentsLoading}
+          />
 
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                Page {currentPage} of {totalPages}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let page;
+                    if (totalPages <= 5) {
+                      page = i + 1;
+                    } else if (currentPage <= 3) {
+                      page = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      page = totalPages - 4 + i;
+                    } else {
+                      page = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-all duration-200 ${
+                          currentPage === page
+                            ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                  className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </DashboardLayout>

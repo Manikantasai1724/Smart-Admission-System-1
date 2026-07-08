@@ -39,6 +39,11 @@ export const getStudents = async (req, res, next) => {
       filter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
 
+    // Phase / Counseling Day filter
+    if (req.query.phase) {
+      filter.phase = req.query.phase;
+    }
+
     // Status filter
     if (req.query.status) {
       switch (req.query.status) {
@@ -372,6 +377,9 @@ export const exportStudents = async (req, res, next) => {
     const filter = { isActive: true };
     if (req.query.department) {
       filter.department = { $regex: `^${req.query.department}$`, $options: "i" };
+    }
+    if (req.query.phase) {
+      filter.phase = req.query.phase;
     }
     const students = await Student.find(filter)
       .sort({ createdAt: -1 })

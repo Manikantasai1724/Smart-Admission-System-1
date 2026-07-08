@@ -21,6 +21,11 @@ export const getStats = async (req, res, next) => {
       baseFilter.department = req.query.department;
     }
 
+    // Optionally scope to the counseling day (phase)
+    if (req.query.phase) {
+      baseFilter.phase = req.query.phase;
+    }
+
     // ── Aggregate counts ──────────────────────────────────────────
     const [
       totalStudents,
@@ -94,8 +99,13 @@ export const getStats = async (req, res, next) => {
  */
 export const getDepartmentProgress = async (req, res, next) => {
   try {
+    const match = { isActive: true };
+    if (req.query.phase) {
+      match.phase = req.query.phase;
+    }
+
     const progress = await Student.aggregate([
-      { $match: { isActive: true } },
+      { $match: match },
       {
         $group: {
           _id: '$department',

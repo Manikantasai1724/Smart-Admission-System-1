@@ -76,9 +76,6 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
               <th className="text-center px-4 py-3.5">
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</span>
               </th>
-              <th className="text-center px-4 py-3.5">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</span>
-              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-primary-400/5">
@@ -90,7 +87,8 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
               return (
                 <tr
                   key={student._id || student.id || index}
-                  className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors group"
+                  onClick={() => navigate(`/students/${student._id || student.id}`)}
+                  className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors group cursor-pointer"
                 >
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className="text-sm text-gray-500 dark:text-gray-400">{index + 1}</span>
@@ -124,7 +122,7 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                       {student.department || '—'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (
                       <StatusToggle
                         checked={!!student.selfReported}
@@ -135,7 +133,7 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                       <StatusBadge status={student.selfReported ? 'completed' : 'pending'} />
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (
                       <StatusToggle
                         checked={!!student.documentsSubmitted}
@@ -146,7 +144,7 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                       <StatusBadge status={student.documentsSubmitted ? 'completed' : 'pending'} />
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (
                       <StatusToggle
                         checked={!!student.formFilled}
@@ -157,10 +155,11 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                       <StatusBadge status={student.formFilled ? 'completed' : 'pending'} />
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center whitespace-nowrap">
+                  <td className="px-4 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                     {canEdit ? (
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           const isComplete = completion >= 100;
                           const newStatus = !isComplete;
                           onStatusChange?.(student._id || student.id, {
@@ -180,15 +179,6 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                     ) : (
                       <StatusBadge status={completion >= 100 ? 'completed' : 'pending'} />
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-center whitespace-nowrap">
-                    <button
-                      onClick={() => navigate(`/students/${student._id || student.id}`)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      View
-                    </button>
                   </td>
                 </tr>
               );

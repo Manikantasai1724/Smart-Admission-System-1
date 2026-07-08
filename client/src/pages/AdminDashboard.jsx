@@ -3,6 +3,7 @@ import { Users, Plus, Edit2, Trash2, ShieldCheck, Loader } from "lucide-react";
 import DashboardLayout from "../components/common/DashboardLayout";
 import userService from "../services/userService";
 import studentService from "../services/studentService";
+import * as settingsService from "../services/settingsService";
 import { useToast } from "../context/ToastContext";
 import { DEPARTMENTS } from "../utils/constants";
 
@@ -14,6 +15,10 @@ function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   
+  const [startDate, setStartDate] = useState("");
+  const [durationDays, setDurationDays] = useState(3);
+  const [savingSetting, setSavingSetting] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -34,8 +39,24 @@ function AdminDashboard() {
     }
   };
 
+  const fetchSettings = async () => {
+    try {
+      const res = await settingsService.getSettings();
+      if (res.data?.settings?.counselingStartDate) {
+        const dateStr = res.data.settings.counselingStartDate.split("T")[0];
+        setStartDate(dateStr);
+      }
+      if (res.data?.settings?.counselingDurationDays) {
+        setDurationDays(Number(res.data.settings.counselingDurationDays));
+      }
+    } catch (err) {
+      console.error("Failed to load settings", err);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchSettings();
   }, []);
 
   const handleOpenModal = (user = null) => {
@@ -107,6 +128,25 @@ function AdminDashboard() {
     }
   };
 
+  const handleSaveSettings = async () => {
+    if (!startDate) {
+      return addToast("error", "Please select a valid start date");
+    }
+    if (!durationDays || durationDays < 1) {
+      return addToast("error", "Please enter a valid number of days (at least 1)");
+    }
+    try {
+      setSavingSetting(true);
+      await settingsService.updateSetting("counselingStartDate", startDate);
+      await settingsService.updateSetting("counselingDurationDays", Number(durationDays));
+      addToast("success", "Counseling configuration updated successfully! Student phases recalculated.");
+    } catch (err) {
+      addToast("error", err.response?.data?.message || "Failed to update configuration");
+    } finally {
+      setSavingSetting(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -132,6 +172,45 @@ function AdminDashboard() {
           >
             <Plus className="w-5 h-5" />
             Add User
+          </button>
+        </div>
+      </div>
+
+      {/* Counseling Settings Card */}
+      <div className="glass-card p-6 mb-8 border border-white/20 dark:border-primary-400/10 rounded-2xl">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+          📅 Counseling Configuration
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Select the counseling starting date and duration. Counseling days on the HOD Dashboard will be counted and generated from these settings.
+        </p>
+        <div className="flex flex-col md:flex-row items-end gap-4">
+          <div className="flex-1 w-full">
+            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Counseling Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-primary-400/10 bg-white/50 dark:bg-primary-950/25 text-gray-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
+            />
+          </div>
+          <div className="w-full md:w-48">
+            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Total Counseling Days</label>
+            <input
+              type="number"
+              min="1"
+              max="30"
+              value={durationDays}
+              onChange={(e) => setDurationDays(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-primary-400/10 bg-white/50 dark:bg-primary-950/25 text-gray-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
+            />
+          </div>
+          <button
+            onClick={handleSaveSettings}
+            disabled={savingSetting}
+            className="w-full md:w-auto px-6 py-2.5 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+          >
+            {savingSetting ? "Saving..." : "Save Configuration"}
           </button>
         </div>
       </div>

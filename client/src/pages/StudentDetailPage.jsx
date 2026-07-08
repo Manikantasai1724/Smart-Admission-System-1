@@ -193,8 +193,9 @@ function StudentDetailPage() {
               )}
               <InfoRow
                 icon={Phone}
-                label="Phone"
+                label="Student Phone"
                 value={student.phone}
+                highlight="green"
               />
               <InfoRow icon={Mail} label="Email" value={student.email} />
               <InfoRow
@@ -206,12 +207,14 @@ function StudentDetailPage() {
                 icon={Phone}
                 label="Parent Phone"
                 value={student.parentPhone}
+                highlight="green"
               />
               {student.tokenNumber && (
                 <InfoRow
                   icon={Hash}
                   label="Token Number"
                   value={`#${student.tokenNumber} (${student.department})`}
+                  highlight="purple"
                 />
               )}
               <InfoRow
@@ -227,11 +230,10 @@ function StudentDetailPage() {
                 <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Status
                 </span>
-                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                  completion >= 100 
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${completion >= 100
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                     : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                }`}>
+                  }`}>
                   {completion >= 100 ? 'Completed' : 'Pending'}
                 </span>
               </div>
@@ -340,11 +342,10 @@ function StudentDetailPage() {
                     </div>
                     {log.newValue !== undefined && (
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${
-                          log.newValue
+                        className={`text-xs px-2 py-0.5 rounded-full ${log.newValue
                             ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                             : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        }`}
+                          }`}
                       >
                         {String(log.newValue)}
                       </span>
@@ -360,17 +361,45 @@ function StudentDetailPage() {
   );
 }
 
-function InfoRow({ icon: Icon, label, value }) {
+function InfoRow({ icon: Icon, label, value, highlight }) {
   if (!value) return null;
+
+  let highlightClass = "";
+  let iconClass = "text-gray-400";
+  let labelClass = "text-gray-500 dark:text-gray-400";
+  let valueClass = "text-gray-800 dark:text-gray-200 font-medium";
+
+  if (highlight === "green") {
+    highlightClass = "bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/10 shadow-sm";
+    iconClass = "text-emerald-600 dark:text-emerald-400";
+    labelClass = "font-bold text-emerald-700 dark:text-emerald-400";
+    valueClass = "text-emerald-950 dark:text-emerald-300 font-bold";
+  } else if (highlight === "purple") {
+    highlightClass = "bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200/50 dark:border-purple-800/10 shadow-sm";
+    iconClass = "text-purple-600 dark:text-purple-400";
+    labelClass = "font-bold text-purple-700 dark:text-purple-400";
+    valueClass = "text-purple-950 dark:text-purple-300 font-bold";
+  }
+
   return (
-    <div className="flex items-center gap-3 text-sm">
-      <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
-      <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">
+    <div className={`flex items-center gap-3 text-sm p-1.5 rounded-lg transition-colors ${highlightClass}`}>
+      <Icon className={`w-4 h-4 flex-shrink-0 ${iconClass}`} />
+      <span className={`w-24 flex-shrink-0 ${labelClass}`}>
         {label}
       </span>
-      <span className="font-medium text-gray-800 dark:text-gray-200 truncate">
+      <span className={`font-semibold truncate ${valueClass}`}>
         {value}
       </span>
+      {highlight === "green" && (
+        <a
+          href={`tel:${value}`}
+          onClick={(e) => e.stopPropagation()}
+          className="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm shadow-emerald-500/25 transition-all duration-200"
+          title={`Call ${value}`}
+        >
+          <Phone className="w-3.5 h-3.5" />
+        </a>
+      )}
     </div>
   );
 }
