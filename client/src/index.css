@@ -78,11 +78,22 @@ body {
   }
 
   .glass-card {
-    @apply bg-white/80 dark:bg-primary-950/50 backdrop-blur-xl border border-white/30 dark:border-primary-400/10 shadow-glass dark:shadow-glass-dark rounded-2xl;
+    @apply bg-white dark:bg-primary-950 border border-gray-200/60 dark:border-primary-400/10 rounded-2xl;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .glass-input {
-    @apply bg-white/60 dark:bg-primary-950/40 backdrop-blur-md border border-gray-200/60 dark:border-primary-400/15 rounded-xl px-4 py-3 outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500;
+    @apply bg-white dark:bg-primary-950 border border-gray-200 dark:border-primary-400/15 rounded-xl px-4 py-3 outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500;
+  }
+
+  @media (min-width: 1024px) {
+    .glass-card {
+      @apply bg-white/80 dark:bg-primary-950/50 backdrop-blur-xl border border-white/30 dark:border-primary-400/10 shadow-glass dark:shadow-glass-dark;
+    }
+
+    .glass-input {
+      @apply bg-white/60 dark:bg-primary-950/40 backdrop-blur-md border border-gray-200/60 dark:border-primary-400/15;
+    }
   }
 
   .glass-button {
@@ -94,7 +105,17 @@ body {
   }
 
   .card-hover {
-    @apply transition-none;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (hover: hover) {
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(7, 101, 147, 0.12);
+    }
+    .dark .card-hover:hover {
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+    }
   }
 }
 
@@ -159,46 +180,41 @@ body {
   overflow: hidden;
 }
 
-/* Floating orbs are hidden for mobile / performance improvement */
+/* Floating orbs are hidden on mobile, shown on desktop */
 .login-orb {
-  display: none !important;
+  display: none;
 }
 
-/* ============================================
-   Override animations & transition delays
-   ============================================ */
-.animate-fade-in,
-.animate-slide-up,
-.animate-slide-down,
-.animate-scale-in,
-.animate-pulse-glow,
-.animate-spin-slow,
-.animate-shimmer,
-.animate-slide-in-right,
-.animate-slide-out-right,
-.animate-bounce-in,
-.animate-float,
-.animate-gradient-shift,
-.animate-cinematic-logo,
-.animate-cinematic-text,
-.animate-flash-sweep,
-.stagger-children > *,
-.skeleton-shimmer {
-  animation: none !important;
-  transition: none !important;
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-.animate-flash-sweep::after {
-  display: none !important;
+@media (min-width: 1024px) {
+  .login-orb {
+    display: block;
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .login-orb:nth-of-type(1) {
+    width: 450px;
+    height: 450px;
+    background: rgba(7, 101, 147, 0.12);
+    top: -10%;
+    left: -10%;
+  }
+  .login-orb:nth-of-type(2) {
+    width: 450px;
+    height: 450px;
+    background: rgba(234, 102, 69, 0.08);
+    bottom: -10%;
+    right: -10%;
+  }
 }
 
 .skeleton-shimmer {
-  background: rgba(0, 0, 0, 0.04) !important;
+  background: rgba(0, 0, 0, 0.04);
 }
 .dark .skeleton-shimmer {
-  background: rgba(255, 255, 255, 0.03) !important;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 /* Toggle Switch base */
@@ -208,5 +224,37 @@ body {
 
 .toggle-switch-dot {
   @apply inline-block h-4 w-4 rounded-full bg-white shadow-md;
+}
+
+/* ============================================
+   Mobile Performance Optimization Overrides
+   ============================================ */
+@media (max-width: 1023px) {
+  /* Disable transitions on mobile for instant rendering and responsiveness */
+  *, *::before, *::after {
+    transition-property: none !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+  
+  /* Disable heavy/continuous layout repaint animations on mobile devices */
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-slide-down,
+  .animate-scale-in,
+  .animate-bounce-in,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-shake,
+  .animate-cinematic-logo,
+  .animate-cinematic-text,
+  .animate-flash-sweep,
+  .stagger-children > * {
+    animation-name: none !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
 

@@ -103,8 +103,8 @@ export default {
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 8px rgba(7, 101, 147, 0.3)' },
-          '50%': { boxShadow: '0 0 25px rgba(234, 102, 69, 0.6)' },
+          '0%, 100%': { opacity: '0.6' },
+          '50%': { opacity: '0.95' },
         },
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
