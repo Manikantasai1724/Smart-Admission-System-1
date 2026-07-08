@@ -34,14 +34,19 @@ function StudentCard({ student, onStatusChange, showActions = true }) {
 
   const handleSubmitToken = async (e) => {
     e.preventDefault();
-    if (!phone.trim() || !parentPhone.trim()) {
+    const cleanPhone = phone.trim().replace(/\D/g, '');
+    const cleanParentPhone = parentPhone.trim().replace(/\D/g, '');
+    if (!cleanPhone || !cleanParentPhone) {
       return addToast('error', 'Both student and parent phone numbers are required');
+    }
+    if (cleanPhone.length !== 10 || cleanParentPhone.length !== 10) {
+      return addToast('error', 'Both phone numbers must be exactly 10 digits');
     }
     try {
       setGenerating(true);
       const res = await generateStudentToken(student._id || student.id, {
-        phone: phone.trim(),
-        parentPhone: parentPhone.trim(),
+        phone: cleanPhone,
+        parentPhone: cleanParentPhone,
       });
       addToast('success', res.data.message || 'Token generated successfully');
       
@@ -86,7 +91,7 @@ function StudentCard({ student, onStatusChange, showActions = true }) {
             </span>
             {student.tokenNumber && (
               <span className="px-2 py-0.5 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-[10px] font-bold text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30 shadow-sm">
-                Token #{student.tokenNumber}
+                Token #{student.tokenNumber} ({student.department})
               </span>
             )}
           </div>
@@ -206,7 +211,9 @@ function StudentCard({ student, onStatusChange, showActions = true }) {
                 type="tel"
                 placeholder="Student mobile number..."
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                maxLength="10"
+                pattern="[0-9]{10}"
                 className="glass-input w-full pl-9 py-2 text-sm"
                 required
               />
@@ -223,7 +230,9 @@ function StudentCard({ student, onStatusChange, showActions = true }) {
                 type="tel"
                 placeholder="Parent mobile number..."
                 value={parentPhone}
-                onChange={(e) => setParentPhone(e.target.value)}
+                onChange={(e) => setParentPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                maxLength="10"
+                pattern="[0-9]{10}"
                 className="glass-input w-full pl-9 py-2 text-sm"
                 required
               />

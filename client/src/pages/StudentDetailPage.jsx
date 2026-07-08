@@ -157,7 +157,7 @@ function StudentDetailPage() {
                 </span>
                 {student.tokenNumber && (
                   <span className="inline-flex px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-sm font-bold text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30 shadow-sm">
-                    Token #{student.tokenNumber}
+                    Token #{student.tokenNumber} ({student.department})
                   </span>
                 )}
               </div>
@@ -211,7 +211,7 @@ function StudentDetailPage() {
                 <InfoRow
                   icon={Hash}
                   label="Token Number"
-                  value={`#${student.tokenNumber}`}
+                  value={`#${student.tokenNumber} (${student.department})`}
                 />
               )}
               <InfoRow

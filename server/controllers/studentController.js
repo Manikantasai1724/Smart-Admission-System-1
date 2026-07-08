@@ -435,13 +435,9 @@ export const generateStudentToken = async (req, res, next) => {
       tokenGeneratedAt: student.tokenGeneratedAt,
     };
 
-    // Calculate calendar date local format (YYYY-MM-DD)
-    const d = new Date();
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-    // Atomically find and increment/create sequence
+    // Atomically find and increment/create global sequence
     const counter = await DailyCounter.findOneAndUpdate(
-      { date: dateStr },
+      { date: "global" },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
