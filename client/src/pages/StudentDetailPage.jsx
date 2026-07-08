@@ -10,6 +10,10 @@ import {
   Hash,
   Award,
   Building,
+  Tag,
+  Globe,
+  Layers,
+  FileText,
 } from "lucide-react";
 import DashboardLayout from "../components/common/DashboardLayout";
 import StudentTimeline from "../components/students/StudentTimeline";
@@ -172,6 +176,21 @@ function StudentDetailPage() {
                 label="Department"
                 value={student.department}
               />
+              {student.gender && (
+                <InfoRow icon={User} label="Gender" value={student.gender} />
+              )}
+              {student.caste && (
+                <InfoRow icon={Tag} label="Caste" value={student.caste} />
+              )}
+              {student.region && (
+                <InfoRow icon={Globe} label="Region" value={student.region} />
+              )}
+              {student.allottedCategory && (
+                <InfoRow icon={Tag} label="Allotted Category" value={student.allottedCategory} />
+              )}
+              {student.phase && (
+                <InfoRow icon={Layers} label="Phase" value={student.phase} />
+              )}
               <InfoRow
                 icon={Phone}
                 label="Phone"

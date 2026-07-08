@@ -106,11 +106,11 @@ export const getStudents = async (req, res, next) => {
       }
     }
 
-    // Phone filter (studentPhone or parentPhone)
+    // Phone filter (phone or parentPhone)
     if (req.query.phone) {
       const phoneRegex = { $regex: req.query.phone, $options: "i" };
       filter.$or = [
-        { studentPhone: phoneRegex },
+        { phone: phoneRegex },
         { parentPhone: phoneRegex },
         ...(filter.$or || []),
       ];

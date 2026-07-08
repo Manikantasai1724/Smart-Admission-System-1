@@ -7,7 +7,7 @@
 
 import fs from "fs";
 import path from "path";
-import * as XLSX from "xlsx";
+import XLSX from "xlsx";
 import csvParser from "csv-parser";
 import pdfParse from "pdf-parse";
 import { GoogleGenAI, Type } from "@google/genai";
@@ -67,6 +67,21 @@ const COLUMN_MAP = {
   address: "address",
   location: "address",
   city: "address",
+  "applicant name": "name",
+  applicantname: "name",
+  applicant_name: "name",
+  gender: "gender",
+  g: "gender",
+  caste: "caste",
+  region: "region",
+  "regio n": "region",
+  reg: "region",
+  "allotted category": "allottedCategory",
+  allottedcategory: "allottedCategory",
+  allotted_category: "allottedCategory",
+  phase: "phase",
+  "phas e": "phase",
+  remarks: "remarks",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -89,8 +104,16 @@ const normalizeRow = (row) => {
   for (const [rawKey, value] of Object.entries(row)) {
     const field = mapColumn(rawKey);
     if (field) {
-      student[field] = typeof value === "string" ? value.trim() : value;
+      if (field === "rank") {
+        student[field] = value;
+      } else {
+        student[field] = value !== null && value !== undefined ? String(value).trim() : "";
+      }
     }
+  }
+
+  if (student.hallTicketNumber) {
+    student.hallTicketNumber = student.hallTicketNumber.toUpperCase();
   }
 
   if (student.rank !== undefined) {
@@ -194,16 +217,22 @@ const extractDataWithGemini = async (text) => {
 You are an expert data extraction assistant. I will provide you with raw text extracted from a PDF.
 This text contains a list of student admission records. Some of it might be messy, OCR'd, or missing labels.
 
-Extract ALL students found in the text. For each student, extract the following 9 fields:
+Extract ALL students found in the text. For each student, extract the following fields:
 1. hallTicketNumber (string, required, typically 8-15 alphanumeric characters)
 2. name (string, required, student's full name)
 3. rank (number, required, e.g. EAMCET rank)
-4. department (string, required, e.g. CSE, ECE, IT, etc.)
-5. phone (string, required, extract whatever phone number is present)
-6. email (string, optional)
-7. parentName (string, optional, father or mother's name)
-8. address (string, optional, full address or location)
-9. parentPhone (string, optional, extract whatever parent/guardian phone number is present)
+4. department (string, required, e.g. CSE, ECE, IT, AIML, CIC, etc.)
+5. gender (string, optional, e.g. M, F)
+6. caste (string, optional, e.g. OC, BC_B, BC_D, etc.)
+7. region (string, optional, e.g. AU, OU, SVU)
+8. allottedCategory (string, optional, e.g. OC_GEN_UR, OC_GEN_AU, etc.)
+9. phase (string, optional, e.g. 1, 2)
+10. remarks (string, optional)
+11. phone (string, optional, extract whatever phone number is present)
+12. email (string, optional)
+13. parentName (string, optional, father or mother's name)
+14. parentPhone (string, optional)
+15. address (string, optional, full address or location)
 
 Return a JSON array of objects. Do not invent data. If an optional field is missing, leave it as an empty string.
 
@@ -226,13 +255,19 @@ ${text}
               name: { type: Type.STRING },
               rank: { type: Type.NUMBER },
               department: { type: Type.STRING },
+              gender: { type: Type.STRING },
+              caste: { type: Type.STRING },
+              region: { type: Type.STRING },
+              allottedCategory: { type: Type.STRING },
+              phase: { type: Type.STRING },
+              remarks: { type: Type.STRING },
               phone: { type: Type.STRING },
               email: { type: Type.STRING },
               parentName: { type: Type.STRING },
               parentPhone: { type: Type.STRING },
               address: { type: Type.STRING },
             },
-            required: ["hallticketno", "name", "rank", "department", "phone"],
+            required: ["hallticketno", "name", "rank", "department"],
           },
         },
       }

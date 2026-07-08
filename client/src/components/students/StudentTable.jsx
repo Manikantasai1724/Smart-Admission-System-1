@@ -109,9 +109,13 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                         <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                           {student.name || '—'}
                         </p>
-                        {student.rank && (
-                          <p className="text-xs text-gray-400">Rank: {student.rank}</p>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1 mt-0.5 text-xs text-gray-400">
+                          {student.rank && <span>Rank: {student.rank}</span>}
+                          {student.gender && <span>• {student.gender}</span>}
+                          {student.caste && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] font-semibold text-gray-600 dark:text-gray-400">{student.caste}</span>}
+                          {student.region && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] font-semibold text-gray-600 dark:text-gray-400">{student.region}</span>}
+                          {student.phase && <span className="px-1 py-0.2 rounded bg-primary-50 dark:bg-primary-900/20 text-[10px] font-semibold text-primary-600 dark:text-primary-400">Phase {student.phase}</span>}
+                        </div>
                       </div>
                     </div>
                   </td>

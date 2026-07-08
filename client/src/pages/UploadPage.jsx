@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Info, Loader } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Info, Loader, Trash2 } from 'lucide-react';
 import DashboardLayout from '../components/common/DashboardLayout';
 import FileUpload from '../components/students/FileUpload';
+import Modal from '../components/common/Modal';
 import { useToast } from '../context/ToastContext';
-import { uploadStudents } from '../services/studentService';
+import { uploadStudents, deleteAllStudents } from '../services/studentService';
 
 function UploadPage() {
   const { addToast } = useToast();
@@ -13,6 +14,23 @@ function UploadPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [results, setResults] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAll = async () => {
+    setDeleting(true);
+    setIsDeleteModalOpen(false);
+    try {
+      await deleteAllStudents();
+      addToast('success', 'Successfully cleared all student data');
+      handleReset();
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to delete student data';
+      addToast('error', message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleFileSelect = (file) => {
     setSelectedFile(file);
@@ -82,16 +100,32 @@ function UploadPage() {
     <DashboardLayout>
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary-100 dark:bg-primary-900/40">
-              <Upload className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-            </div>
-            Upload Students
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">
-            Upload student data from Excel or CSV files to the system
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary-100 dark:bg-primary-900/40">
+                <Upload className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              Upload Students
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">
+              Upload student data from Excel or CSV files to the system
+            </p>
+          </div>
+          <div>
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              disabled={deleting}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800/30 transition-colors font-medium text-sm disabled:opacity-50"
+            >
+              {deleting ? (
+                <Loader className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              Delete Uploaded Data
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -254,7 +288,7 @@ function UploadPage() {
                 <div>
                   <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-1.5">Required Columns</h4>
                   <ul className="space-y-1.5">
-                    {['name', 'hallTicketNumber', 'rank', 'department', 'phone'].map(col => (
+                    {['Applicant Name', 'Hall Ticket', 'Rank', 'Branch'].map(col => (
                       <li key={col} className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary-400" />
                         <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{col}</code>
@@ -265,7 +299,7 @@ function UploadPage() {
                 <div>
                   <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-1.5">Optional Columns</h4>
                   <ul className="space-y-1.5">
-                    {['email', 'parentName', 'address'].map(col => (
+                    {['Gender', 'Caste', 'Region', 'Allotted Category', 'Phase', 'Remarks', 'Phone', 'Email', 'Parent Name', 'Parent Phone', 'Address'].map(col => (
                       <li key={col} className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
                         <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">{col}</code>
@@ -282,6 +316,43 @@ function UploadPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Confirm Data Deletion"
+        footer={
+          <>
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="glass-button text-gray-700 dark:text-gray-300"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteAll}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors text-sm font-semibold shadow-md shadow-red-500/20"
+            >
+              Confirm Delete
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to delete all uploaded student data? This action will permanently delete:
+          </p>
+          <ul className="list-disc pl-5 text-sm text-gray-500 dark:text-gray-400 space-y-1">
+            <li>All student admission records</li>
+            <li>All admission step completion records (self-reported, docs submitted, form filled)</li>
+            <li>Associated student audit logs</li>
+          </ul>
+          <p className="text-red-500 dark:text-red-400 font-semibold text-sm">
+            ⚠️ Warning: This action is irreversible and will delete all student records!
+          </p>
+        </div>
+      </Modal>
     </DashboardLayout>
   );
 }

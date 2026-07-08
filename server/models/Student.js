@@ -37,8 +37,33 @@ const studentSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: [true, "Phone number is required"],
       trim: true,
+      default: "",
+    },
+    gender: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    caste: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    region: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    allottedCategory: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    phase: {
+      type: String,
+      trim: true,
+      default: "",
     },
     parentName: {
       type: String,

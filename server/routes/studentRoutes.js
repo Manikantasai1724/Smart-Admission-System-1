@@ -84,7 +84,7 @@ router.get('/:id', auth, getStudentById);
  * POST /api/students/upload
  * Bulk upload students from file (HOD only).
  */
-router.post('/upload', auth, authorize('HOD'), upload.single('file'), uploadStudents);
+router.post('/upload', auth, authorize('Admin'), upload.single('file'), uploadStudents);
 
 /**
  * PUT /api/students/:id/status

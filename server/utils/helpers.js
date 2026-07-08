@@ -46,7 +46,7 @@ export const buildSearchQuery = (query) => {
   const conditions = [
     { name: regex },
     { hallTicketNumber: regex },
-    { studentPhone: regex },
+    { phone: regex },
     { parentPhone: regex },
     { email: regex },
   ];

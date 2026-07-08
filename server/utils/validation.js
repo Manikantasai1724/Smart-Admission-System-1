@@ -56,9 +56,7 @@ export const isValidStudentData = (student) => {
     errors.push("Missing department");
   }
   
-  if (!student.phone) {
-    errors.push("Missing phone number");
-  } else if (!validatePhone(student.phone)) {
+  if (student.phone && !validatePhone(student.phone)) {
     errors.push("Invalid phone number format");
   }
   

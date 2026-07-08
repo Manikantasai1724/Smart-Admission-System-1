@@ -81,7 +81,7 @@ function App() {
               <Route
                 path="/upload"
                 element={
-                  <ProtectedRoute allowedRoles={["hod"]}>
+                  <ProtectedRoute allowedRoles={["admin"]}>
                     <UploadPage />
                   </ProtectedRoute>
                 }
