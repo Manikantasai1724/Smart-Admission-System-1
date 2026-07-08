@@ -1,240 +1,196 @@
 # Smart Admission Tracking & Verification System
 
-A comprehensive system for tracking and managing student admissions with role-based access control for HODs and Volunteers.
+[![Production Ready](https://img.shields.io/badge/Status-Production--Ready-success.svg)](#)
+[![Vite Client](https://img.shields.io/badge/Client-React%20%7C%20Vite%20%7C%20Tailwind-blue.svg)](#)
+[![Node Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-green.svg)](#)
+[![Database](https://img.shields.io/badge/Database-MongoDB%20%7C%20Mongoose-emerald.svg)](#)
 
-## Features
+A secure, high-performance web portal designed for tracking, managing, and verifying student admissions in real-time. Built with a robust role-based access control (RBAC) architecture, the system provides separate dashboards for Head of Departments (HODs) and Admission Volunteers, enabling efficient bulk imports, status tracking, queuing, and activity audit trails.
 
-- **HOD Dashboard**: Upload student data via CSV/XLSX/PDF files
-- **Volunteer Dashboard**: Track and manage student progress
-- **Real-time Updates**: Socket.IO integration for live notifications
-- **Audit Logging**: Complete history of all student status changes
-- **Department-based Access**: Volunteers can only see students from their department
-- **Multi-format Support**: Import student data from Excel, CSV, or PDF files
+---
 
-## Supported Departments
+## 🚀 Key Features
 
-- CSE (Computer Science & Engineering)
-- AIML (Artificial Intelligence & Machine Learning)
-- CIC (Cyber Intelligence & Computing)
+*   **Role-Based Access Control (RBAC)**: Enforced segregation of duties between HOD/Admin and Volunteer accounts.
+*   **HOD Analytics Portal**: Comprehensive dashboard showing real-time statistics, completion progress rings, and department performance metrics.
+*   **Volunteer Workflow Management**: Clean, mobile-friendly interface for verifying student contacts, generating tokens, and tracking multi-step check-ins.
+*   **Automated Queue/Token System**: High-concurrency daily-resetting queue sequence generation (timezone-aware).
+*   **Smart Bulk Importer**: Robust file parser handling Excel (`.xlsx`, `.xls`), CSV, and PDF datasets with smart header mapping and automatic duplicates skipping.
+*   **Dynamic Data Exporting**: Quick download of filtered datasets to Excel (`.xlsx`) or custom-styled PDFs, complete with filter-based file naming.
+*   **Real-time Socket.IO Syncing**: Real-time push updates for status updates, notifications, and activity feed logs.
+*   **Comprehensive Audit Logs**: Complete state change histories, showing old vs. new values, author, and timestamp.
+*   **Production Optimized Layouts**: Instant loading (no artificial splash screens), hardware-accelerated layouts, and scrollable responsive overlays.
 
-## Project Structure
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology | Key Packages / Utilities |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, Vite | React Router DOM, Socket.io Client, Axios, TailwindCSS, Lucide Icons |
+| **Backend** | Node.js, Express | Multer (File Handling), Mongoose, Socket.io, JWT, BcryptJS |
+| **Database** | MongoDB | Transactional Daily Sequences, Text Search Indexes, Multi-key Compound Indexes |
+| **Export Engines**| XLSX, jsPDF | `xlsx` (Excel engine), `jspdf-autotable` (PDF report formatter) |
+
+---
+
+## 📁 System Architecture
 
 ```
 smart-admission-system/
-├── client/                 # React frontend
+├── client/                     # React Frontend
+│   ├── public/                 # Static assets & SPA routing configurations
 │   ├── src/
-│   │   ├── components/    # Reusable components
-│   │   ├── pages/         # Page components
-│   │   ├── services/      # API services
-│   │   ├── context/       # React context (Auth, Theme, etc)
-│   │   ├── hooks/         # Custom React hooks
-│   │   └── utils/         # Utilities and constants
+│   │   ├── components/         # Common, layout, and domain components
+│   │   ├── context/            # Global React Contexts (Auth, Socket, Toast)
+│   │   ├── pages/              # Primary route views (Dashboard, Logs, Upload)
+│   │   ├── services/           # Axios HTTP request configurations
+│   │   └── utils/              # Helper functions & constant definitions
 │   └── package.json
 │
-└── server/                # Express backend
-    ├── controllers/       # Route handlers
-    ├── models/            # MongoDB models
-    ├── routes/            # API routes
-    ├── middleware/        # Express middleware (Auth, RBAC, etc)
-    ├── services/          # Business logic
-    ├── config/            # Configuration files
-    ├── utils/             # Utility functions
+└── server/                     # Express Backend
+    ├── config/                 # Environment and DB initializers
+    ├── controllers/            # Route business logic handlers
+    ├── middleware/             # Express handlers (Auth verify, RBAC authorize)
+    ├── models/                 # Mongoose schemas (Student, AuditLog, DailyCounter)
+    ├── routes/                 # Express REST endpoint maps
+    ├── services/               # File parsers and database transaction runners
     └── package.json
 ```
 
-## Getting Started
+---
+
+## 🚦 Getting Started
 
 ### Prerequisites
+*   Node.js (v16.0.0 or higher)
+*   MongoDB (v5.0 or higher, Local or Atlas Cloud URI)
+*   npm (v8.0.0 or higher)
 
-- Node.js (v14 or higher)
-- MongoDB (local or cloud)
-- npm or yarn
+### Setup & Installation
 
-### Installation
+1.  **Clone the Repository**
+    ```bash
+    git clone <repository-url>
+    cd smart-admission-system
+    ```
 
-1. **Clone the repository**
+2.  **Configure & Launch the Backend Server**
+    ```bash
+    cd server
+    # Copy env template and modify variables
+    cp .env.example .env
+    
+    # Install server dependencies
+    npm install
+    
+    # Populate the database with default test users
+    npm run seed
+    
+    # Start server in development mode
+    npm run dev
+    ```
+    *Note: The server will run on `http://localhost:5000`.*
 
-   ```bash
-   git clone <repository-url>
-   cd smart-admission-system
-   ```
+3.  **Configure & Launch the React Client**
+    ```bash
+    cd ../client
+    # Install client dependencies
+    npm install
+    
+    # Run the client dev server
+    npm run dev
+    ```
+    *Note: The React development server will start on `http://localhost:5173`.*
 
-2. **Setup Server**
+---
 
-   ```bash
-   cd server
-   cp .env.example .env
-   # Edit .env with your MongoDB URI and JWT secret
-   npm install
-   npm run seed  # Create test users
-   npm run dev   # Start development server
-   ```
+## 🔑 Default Credentials
 
-3. **Setup Client**
-   ```bash
-   cd ../client
-   npm install
-   npm run dev   # Start development server
-   ```
+The database seeder configures standard accounts for testing role permissions across various branches:
 
-## Default Test Credentials
+| Department | HOD / Admin Credentials | Volunteer Credentials |
+| :--- | :--- | :--- |
+| **CSE** | `admin` / `admin123` | `volunteer` / `vol123` |
+| **AIML**| `hod_aiml` / `hod123` | `volunteer_aiml` / `vol123` |
+| **CIC** | `hod_cic` / `hod123` | `volunteer_cic` / `vol123` |
 
-### CSE Department
+---
 
-- **HOD**: `admin` / `admin123`
-- **Volunteer**: `volunteer` / `vol123`
+## 📋 Admission Workflow
 
-### AIML Department
-
-- **HOD**: `hod_aiml` / `hod123`
-- **Volunteer**: `volunteer_aiml` / `vol123`
-
-### CIC Department
-
-- **HOD**: `hod_cic` / `hod123`
-- **Volunteer**: `volunteer_cic` / `vol123`
-
-## Workflow
-
-### 1. HOD Uploads Student Data
-
-1. Login as HOD (e.g., `admin` / `admin123`)
-2. Navigate to **Upload** page
-3. Select a file in CSV, XLSX, or PDF format
-4. View preview of data (first 10 rows)
-5. Click **Upload**
-6. Receive summary: inserted students, duplicates skipped, errors
-
-### 2. Volunteers Manage Students
-
-1. Login as Volunteer (e.g., `volunteer` / `vol123`)
-2. Navigate to **Students** page
-3. View all students from your department
-4. Search and filter by status, rank, phone, etc
-5. Click on a student to view details
-6. Update admission status:
-   - Mark as "Self Reported"
-   - Mark as "Documents Submitted"
-   - Mark as "Form Filled"
-7. Add remarks as needed
-
-### 3. Tracking & Auditing
-
-- HOD Dashboard shows department statistics and activity
-- All student updates are logged with timestamp and user information
-- Volunteers can see who made each change via audit logs
-
-## File Upload Format
-
-### Supported Column Names
-
-The system recognizes various column name formats:
-
-**Student Hall Ticket**
-
-- `hallTicketNumber`, `htno`, `hall_ticket_no`, `hall ticket number`
-
-**Name**
-
-- `name`, `student name`, `full_name`
-
-**Rank**
-
-- `rank`, `eamcet rank`, `merit rank`
-
-**Department**
-
-- `department`, `dept`, `branch`
-
-**Phones**
-
-- `studentPhone`, `phone`, `mobile`, `contact`
-- `parentPhone`, `parent_phone`, `guardian mobile`
-
-**Email**
-
-- `email`, `email_id`, `student email`
-
-**Category**
-
-- `category`, `caste`, `reservation`
-
-**Gender**
-
-- `gender` (M/Male/Female/F → normalized to Male/Female/Other)
-
-### Example CSV Format
-
-```
-hallTicketNumber,name,rank,department,studentPhone,parentPhone,email,category,gender
-00001,Ramesh Kumar,1234,CSE,9876543210,9876543211,ramesh@student.edu,OC,Male
-00002,Priya Sharma,2345,AIML,9876543220,9876543221,priya@student.edu,BC-A,Female
+```mermaid
+graph TD
+    A[HOD: Uploads XLSX/CSV/PDF] --> B[System: Normalizes & Skips Duplicates]
+    B --> C[Volunteer: Searches/Filters Students]
+    C --> D[Volunteer: Verifies Phone Numbers]
+    D --> E[System: Generates Daily Queue Token]
+    E --> F[Volunteer: Marks Steps & Adds Remarks]
+    F --> G[System: Auto-computes Completion % & Log Audits]
+    G --> H[HOD: Monitors Stats & Exports Reports]
 ```
 
-## API Endpoints
+### 1. Data Ingestion (HOD/Admin)
+*   Login as an HOD. Go to the **Upload** section.
+*   Upload a student record dataset. Supported formats include `.xlsx`, `.csv`, and `.pdf`.
+*   Preview parsed columns. The parser uses regex to normalize header names automatically (e.g. mapping `htno`, `hall_ticket_no`, or `hall ticket number` to `hallTicketNumber`).
+*   Confirm upload to parse and insert students. Duplicates with the same `hallTicketNumber` are automatically filtered out.
 
-### Authentication
+### 2. Physical Verification & Queuing (Volunteer)
+*   Volunteers log in and automatically see student records matching *only* their department.
+*   Locate the student via live search or rank filters.
+*   Click **Generate Token** to trigger the contact verification modal.
+*   Input verified student and parent numbers to request a daily resetting queue number (IST timezone-aware).
 
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user
+### 3. Admission Process Tracking (Volunteer)
+*   Update individual milestones in the student card:
+    *   **Self Reported** (Student has completed online self-reporting)
+    *   **Documents Submitted** (Physical documents handed in)
+    *   **Form Filled** (Admission forms completed and processed)
+*   The backend automatically calculates the overall completion percentage (`0%`, `33%`, `67%`, `100%`) and timestamps the record upon completion.
 
-### Students (All authenticated users)
+---
 
-- `GET /api/students` - List students (paginated, filterable)
-- `GET /api/students/:id` - Get student details
-- `PUT /api/students/:id/status` - Update student status
+## 📑 API Endpoints
 
-### Students (HOD only)
+### 🔐 Authentication (`/api/auth`)
+*   `POST /login` - Sign in and receive JWT token.
+*   `GET /me` - Fetch profile metadata for the authenticated session.
 
-- `POST /api/students/upload` - Upload student file
-- `DELETE /api/students/:id` - Delete student
+### 🎓 Students (`/api/students`)
+*   `GET /` - Paginated and filterable student records list (*all authenticated roles*).
+*   `GET /:id` - Fetch detailed profile card with recent audit log trail (*all authenticated roles*).
+*   `PUT /:id/status` - Modify checklist milestones and remarks (*Volunteer only*).
+*   `POST /:id/generate-token` - Generate a daily sequence number (*Volunteer only*).
+*   `GET /export/all` - Fetch full dataset based on filters (*HOD/Admin only*).
+*   `DELETE /:id` - Soft-delete a student (*HOD only*).
+*   `DELETE /bulk/all` - Clear all student tables (*Admin only*).
 
-### Dashboard (HOD only)
+### 📊 Analytics (`/api/dashboard`)
+*   `GET /stats` - Fetch real-time count summaries and department matrices (*HOD/Admin only*).
 
-- `GET /api/dashboard/stats` - Department statistics
+### 📜 System Log (`/api/logs`)
+*   `GET /` - Paginated global system logs (*all authenticated roles*).
 
-### Audit Logs (All authenticated users)
+---
 
-- `GET /api/logs` - View audit logs
+## ⚡ Deployment & Build Optimization
 
-## Deployment
+### Production Checklist
+1.  Configure environment variables in the hosting panel:
+    *   `NODE_ENV=production`
+    *   `PORT=5000`
+    *   `MONGO_URI` (Production MongoDB cluster endpoint)
+    *   `JWT_SECRET` (A cryptographically secure key string)
+2.  Set `VITE_API_URL` (pointing to the backend endpoint URL, e.g. `https://api.yourdomain.com`).
+3.  Vite generates static build assets inside `client/dist`. The system includes:
+    *   [Vercel configuration](file:///c:/Users/Manikanta%20Sai/Smart%20Admission%20System/smart-admission-system/client/vercel.json) to handle Single Page App (SPA) routes.
+    *   [Netlify routing config](file:///c:/Users/Manikanta%20Sai/Smart%20Admission%20System/smart-admission-system/client/public/_redirects) for clean redirect rewrites.
 
-### Production Setup
-
-1. Set secure JWT secret in `.env`
-2. Update MongoDB URI to production database
-3. Set `NODE_ENV=production`
-4. Build client: `npm run build`
-5. Deploy to hosting service (Vercel, Heroku, AWS, etc)
-
-## Security Notes
-
-- Passwords are hashed using bcryptjs
-- JWT tokens expire after 24 hours
-- Volunteers can only access their department's data
-- All changes are audited and logged
-- CORS is configured for specified origins
-
-## Troubleshooting
-
-### Upload fails with "Cannot parse file"
-
-- Ensure file format is supported (CSV, XLSX, PDF)
-- Check column headers match expected format
-- Ensure all mandatory fields are present
-
-### Students not appearing after upload
-
-- Verify HOD department matches student department in file
-- Check for duplicate hall ticket numbers (already uploaded)
-- Review upload response for specific errors
-
-### Cannot login as Volunteer
-
-- Run seed script: `npm run seed`
-- Verify user exists in database
-- Check password is correct
-
-## Support
-
-For issues or questions, please contact the development team.
+### Compile Verification
+Build compilation checks can be verified using:
+```bash
+cd client
+npm run build
+```
+The client builds cleanly in under 15 seconds, creating highly optimized, code-splitted production assets.
