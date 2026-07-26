@@ -111,9 +111,9 @@ The database seeder configures standard accounts for testing role permissions ac
 
 | Department | HOD / Admin Credentials | Volunteer Credentials |
 | :--- | :--- | :--- |
-| **CSE** | `admin` / `admin123` | `volunteer` / `vol123` |
-| **AIML**| `hod_aiml` / `hod123` | `volunteer_aiml` / `vol123` |
-| **CIC** | `hod_cic` / `hod123` | `volunteer_cic` / `vol123` |
+| **admin** | `admin` / `admin123` |
+| **volunteer**| `volunteer` / `vol123` |
+| **hod** | `hod_` / `hod123` | 
 
 ---
 
