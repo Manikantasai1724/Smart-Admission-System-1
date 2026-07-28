@@ -45,7 +45,7 @@ function AdminLoginPage() {
     setIsLoading(true);
     setLoginError("");
     try {
-      await login(data.username, data.password);
+      await login(data.username, data.password, "admin");
       addToast("success", "Welcome back, Admin!");
     } catch (error) {
       const message =
@@ -61,7 +61,7 @@ function AdminLoginPage() {
     setIsLoading(true);
     setLoginError("");
     try {
-      await login("admin", "admin123");
+      await login("admin", "admin123", "admin");
       addToast("success", "Welcome back, Admin!");
     } catch (error) {
       const message =

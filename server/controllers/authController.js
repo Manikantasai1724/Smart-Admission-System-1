@@ -17,7 +17,7 @@ import config from "../config/env.js";
  */
 export const login = async (req, res, next) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, expectedRole } = req.body;
 
     // Fetch user WITH the password field (select: false in schema)
     const user = await User.findOne({
@@ -42,6 +42,13 @@ export const login = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: "Invalid username or password.",
+      });
+    }
+
+    if (expectedRole && user.role.toLowerCase() !== expectedRole.toLowerCase()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to log in through this portal.",
       });
     }
 

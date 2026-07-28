@@ -19,7 +19,6 @@ const HOD_LINKS = [
 
 const VOLUNTEER_LINKS = [
   { to: '/volunteer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/students', label: 'Students', icon: Users },
 ];
 
 const ADMIN_LINKS = [

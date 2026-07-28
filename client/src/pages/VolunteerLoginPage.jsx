@@ -47,7 +47,7 @@ function VolunteerLoginPage() {
     setIsLoading(true);
     setLoginError("");
     try {
-      await login(data.username, data.password);
+      await login(data.username, data.password, "volunteer");
       addToast("success", "Welcome back! Login successful.");
     } catch (error) {
       const message =
