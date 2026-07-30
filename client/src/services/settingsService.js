@@ -1,7 +1,7 @@
 import api from "./api";
 
-export const getSettings = () => {
-  return api.get("/settings");
+export const getSettings = (options = {}) => {
+  return api.get("/settings", options);
 };
 
 export const updateSetting = (key, value) => {

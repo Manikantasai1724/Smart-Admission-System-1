@@ -153,10 +153,21 @@ const studentSchema = new mongoose.Schema(
 // hallTicketNumber: unique constraint already defined at field level
 studentSchema.index({ rank: 1 });
 studentSchema.index({ department: 1 });
+studentSchema.index({ email: 1 });
 studentSchema.index({ name: "text" }); // text search
 studentSchema.index({ tokenNumber: 1 });
 studentSchema.index({ phone: 1 });
 studentSchema.index({ parentPhone: 1 });
+studentSchema.index({ createdAt: -1 });
+studentSchema.index({ completedAt: -1 });
+studentSchema.index({ isActive: 1, createdAt: -1 });
+studentSchema.index({ isActive: 1, department: 1, phase: 1 });
+studentSchema.index({
+  isActive: 1,
+  selfReported: 1,
+  documentsSubmitted: 1,
+  formFilled: 1,
+});
 studentSchema.index({
   department: 1,
   selfReported: 1,

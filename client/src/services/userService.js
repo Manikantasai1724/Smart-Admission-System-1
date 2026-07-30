@@ -1,7 +1,7 @@
 import api from './api';
 
-export const getUsers = () => {
-  return api.get('/users');
+export const getUsers = (options = {}) => {
+  return api.get('/users', options);
 };
 
 export const createUser = (data) => {

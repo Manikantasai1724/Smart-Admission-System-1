@@ -79,6 +79,10 @@ const userSchema = new mongoose.Schema(
   },
 );
 
+userSchema.index({ role: 1, department: 1 });
+userSchema.index({ email: 1 });
+userSchema.index({ createdAt: -1 });
+
 // ── Pre-save: hash password ──────────────────────────────────────────────────
 userSchema.pre("save", async function preSaveHashPassword(next) {
   // Only hash if the password field was modified (or is new)

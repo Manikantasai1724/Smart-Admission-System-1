@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 function StatusToggle({ checked = false, onChange, disabled = false, label = '' }) {
   const handleToggle = () => {
@@ -43,4 +43,4 @@ function StatusToggle({ checked = false, onChange, disabled = false, label = '' 
   );
 }
 
-export default StatusToggle;
+export default memo(StatusToggle);

@@ -13,4 +13,23 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    target: 'esnext',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('xlsx') || id.includes('jspdf') || id.includes('file-saver')) {
+              return 'vendor-export';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+          }
+        },
+      },
+    },
+  },
 });

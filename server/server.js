@@ -18,6 +18,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
 
 import config from './config/env.js';
 import connectDB from './config/db.js';
@@ -50,6 +51,7 @@ app.use(
   })
 );
 app.use(helmet());
+app.use(compression());
 app.use(morgan(config.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

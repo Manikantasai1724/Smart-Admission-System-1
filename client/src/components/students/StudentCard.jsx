@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Clock, Phone, UserCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -246,4 +246,4 @@ function StudentCard({ student, onStatusChange, onTokenGenerated, showActions = 
   );
 }
 
-export default StudentCard;
+export default memo(StudentCard);

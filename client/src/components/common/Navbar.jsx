@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Sun, Moon, LogOut, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -114,4 +114,4 @@ function Navbar({ onToggleSidebar }) {
   );
 }
 
-export default Navbar;
+export default memo(Navbar);

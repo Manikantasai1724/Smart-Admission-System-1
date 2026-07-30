@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -150,4 +150,4 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
   );
 }
 
-export default Sidebar;
+export default memo(Sidebar);

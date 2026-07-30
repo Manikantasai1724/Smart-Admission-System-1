@@ -36,7 +36,7 @@ export const getStudents = async (req, res, next) => {
 
     // Department filter
     if (req.query.department) {
-      filter.department = { $regex: `^${req.query.department}$`, $options: "i" };
+      filter.department = req.query.department;
     }
 
     // Phase / Counseling Day filter
@@ -60,34 +60,10 @@ export const getStudents = async (req, res, next) => {
           ];
           break;
         case "in-progress":
-          filter.$expr = {
-            $and: [
-              {
-                $gt: [
-                  {
-                    $add: [
-                      { $cond: ["$selfReported", 1, 0] },
-                      { $cond: ["$documentsSubmitted", 1, 0] },
-                      { $cond: ["$formFilled", 1, 0] },
-                    ],
-                  },
-                  0,
-                ],
-              },
-              {
-                $lt: [
-                  {
-                    $add: [
-                      { $cond: ["$selfReported", 1, 0] },
-                      { $cond: ["$documentsSubmitted", 1, 0] },
-                      { $cond: ["$formFilled", 1, 0] },
-                    ],
-                  },
-                  3,
-                ],
-              },
-            ],
-          };
+          filter.$and = [
+            { $or: [{ selfReported: true }, { documentsSubmitted: true }, { formFilled: true }] },
+            { $or: [{ selfReported: false }, { documentsSubmitted: false }, { formFilled: false }] }
+          ];
           break;
         default:
           break;

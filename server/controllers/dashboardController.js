@@ -26,65 +26,99 @@ export const getStats = async (req, res, next) => {
       baseFilter.phase = req.query.phase;
     }
 
-    // ── Aggregate counts ──────────────────────────────────────────
-    const [
-      totalStudents,
-      completedStudents,
-      pendingStudents,
-      selfReportedCount,
-      documentsSubmittedCount,
-      formFilledCount,
-      todayCount,
-    ] = await Promise.all([
-      Student.countDocuments(baseFilter),
-      Student.countDocuments({
-        ...baseFilter,
-        selfReported: true,
-        documentsSubmitted: true,
-        formFilled: true,
-      }),
-      Student.countDocuments({
-        ...baseFilter,
-        $or: [
-          { selfReported: false },
-          { documentsSubmitted: false },
-          { formFilled: false },
-        ]
-      }),
-      Student.countDocuments({ ...baseFilter, selfReported: true }),
-      Student.countDocuments({ ...baseFilter, documentsSubmitted: true }),
-      Student.countDocuments({ ...baseFilter, formFilled: true }),
-      (() => {
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-        return Student.countDocuments({
-          ...baseFilter,
-          completedAt: { $gte: startOfDay },
-        });
-      })(),
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    // ── Single Pass Aggregation + Parallel Audit Log Query ─────────────
+    const [statsAggregate, recentActivity] = await Promise.all([
+      Student.aggregate([
+        { $match: baseFilter },
+        {
+          $group: {
+            _id: null,
+            totalStudents: { $sum: 1 },
+            completedStudents: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $eq: ['$selfReported', true] },
+                      { $eq: ['$documentsSubmitted', true] },
+                      { $eq: ['$formFilled', true] },
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+            pendingStudents: {
+              $sum: {
+                $cond: [
+                  {
+                    $or: [
+                      { $eq: ['$selfReported', false] },
+                      { $eq: ['$documentsSubmitted', false] },
+                      { $eq: ['$formFilled', false] },
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+            selfReportedCount: {
+              $sum: { $cond: [{ $eq: ['$selfReported', true] }, 1, 0] },
+            },
+            documentsSubmittedCount: {
+              $sum: { $cond: [{ $eq: ['$documentsSubmitted', true] }, 1, 0] },
+            },
+            formFilledCount: {
+              $sum: { $cond: [{ $eq: ['$formFilled', true] }, 1, 0] },
+            },
+            todayCount: {
+              $sum: {
+                $cond: [
+                  { $gte: ['$completedAt', startOfDay] },
+                  1,
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      ]),
+      AuditLog.find({})
+        .sort({ timestamp: -1 })
+        .limit(10)
+        .populate('studentId', 'name hallTicketNumber department')
+        .populate('updatedBy', 'name email')
+        .lean(),
     ]);
 
-    const inProgressStudents = 0; // Deprecated, keeping for UI backward compatibility if needed
+    const statsData = statsAggregate[0] || {
+      totalStudents: 0,
+      completedStudents: 0,
+      pendingStudents: 0,
+      selfReportedCount: 0,
+      documentsSubmittedCount: 0,
+      formFilledCount: 0,
+      todayCount: 0,
+    };
 
-    // ── Recent activity ───────────────────────────────────────────
-    const recentActivity = await AuditLog.find({})
-      .sort({ timestamp: -1 })
-      .limit(10)
-      .populate('studentId', 'name hallTicketNumber department')
-      .populate('updatedBy', 'name email')
-      .lean();
+    const inProgressStudents = 0; // Deprecated, keeping for UI backward compatibility if needed
 
     res.status(200).json({
       success: true,
       stats: {
-        totalStudents,
-        completedStudents,
-        pendingStudents,
+        totalStudents: statsData.totalStudents,
+        completedStudents: statsData.completedStudents,
+        pendingStudents: statsData.pendingStudents,
         inProgressStudents,
-        selfReportedCount,
-        documentsSubmittedCount,
-        formFilledCount,
-        todayCount,
+        selfReportedCount: statsData.selfReportedCount,
+        documentsSubmittedCount: statsData.documentsSubmittedCount,
+        formFilledCount: statsData.formFilledCount,
+        todayCount: statsData.todayCount,
       },
       recentActivity,
     });

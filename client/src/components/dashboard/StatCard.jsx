@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { memo } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 function AnimatedCounter({ end }) {
@@ -78,4 +78,4 @@ function StatCard({ title, value, icon: Icon, trend, trendValue, color = 'primar
   );
 }
 
-export default StatCard;
+export default memo(StatCard);

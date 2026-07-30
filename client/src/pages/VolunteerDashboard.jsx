@@ -33,12 +33,12 @@ function VolunteerDashboard() {
     setSearchTerm('');
   }, [searchType]);
 
-  const fetchStudents = useCallback(async (search = '') => {
+  const fetchStudents = useCallback(async (search = '', signal) => {
     try {
       setLoading(true);
 
       // Always fetch true global stats from dashboard API
-      const statsRes = await getStats();
+      const statsRes = await getStats({}, { signal });
       const globalStats = statsRes.data.stats || statsRes.data;
       
       setStats({ 
@@ -54,47 +54,57 @@ function VolunteerDashboard() {
       }
 
       const params = { limit: 20, status: 'pending' };
-      if (searchType === 'token') {
-        params.tokenNumber = search;
-      } else {
-        params.search = search;
-      }
-
-      const res = await getStudents(params);
-      const students = res.data.students || res.data.data || [];
-      setPendingStudents(students);
-
-      // Fetch recently updated matching search
       const recentParams = { limit: 10, sort: '-updatedAt' };
       if (searchType === 'token') {
+        params.tokenNumber = search;
         recentParams.tokenNumber = search;
       } else {
+        params.search = search;
         recentParams.search = search;
       }
-      const recentRes = await getStudents(recentParams);
+
+      // Parallel execution of search queries
+      const [res, recentRes] = await Promise.all([
+        getStudents(params, { signal }),
+        getStudents(recentParams, { signal }),
+      ]);
+
+      const students = res.data.students || res.data.data || [];
+      setPendingStudents(students);
       setRecentUpdates(recentRes.data.students || recentRes.data.data || []);
     } catch (error) {
-      console.error('Error fetching students:', error);
-      addToast('error', 'Failed to load student data');
+      if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+        console.error('Error fetching students:', error);
+        addToast('error', 'Failed to load student data');
+      }
     } finally {
       setLoading(false);
     }
   }, [addToast, searchType]);
 
   useEffect(() => {
-    fetchStudents(debouncedSearch);
+    const controller = new AbortController();
+    fetchStudents(debouncedSearch, controller.signal);
+    return () => controller.abort();
   }, [debouncedSearch, fetchStudents]);
 
-  // Socket.IO for live updates
+  // Socket.IO for live updates with 500ms debounce
   useEffect(() => {
     if (!socket) return;
 
+    let timer = null;
     const handleUpdate = () => {
-      fetchStudents(debouncedSearch);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        fetchStudents(debouncedSearch);
+      }, 500);
     };
 
     socket.on('student:updated', handleUpdate);
-    return () => socket.off('student:updated', handleUpdate);
+    return () => {
+      if (timer) clearTimeout(timer);
+      socket.off('student:updated', handleUpdate);
+    };
   }, [socket, debouncedSearch, fetchStudents]);
 
   const handleStatusChange = async (studentId, field, value) => {

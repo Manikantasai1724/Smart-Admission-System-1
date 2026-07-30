@@ -27,37 +27,48 @@ function AdminDashboard() {
     department: "ALL"
   });
 
-  const fetchUsers = async () => {
+  const loadAdminData = useCallback(async (signal) => {
     try {
       setLoading(true);
+      const [usersRes, settingsRes] = await Promise.all([
+        userService.getUsers({ signal }),
+        settingsService.getSettings({ signal }),
+      ]);
+
+      if (usersRes.data?.users) {
+        setUsers(usersRes.data.users);
+      }
+      if (settingsRes.data?.settings?.counselingStartDate) {
+        const dateStr = settingsRes.data.settings.counselingStartDate.split("T")[0];
+        setStartDate(dateStr);
+      }
+      if (settingsRes.data?.settings?.counselingDurationDays) {
+        setDurationDays(Number(settingsRes.data.settings.counselingDurationDays));
+      }
+    } catch (err) {
+      if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+        console.error("Failed to load admin data", err);
+        addToast("error", "Failed to fetch admin data");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [addToast]);
+
+  const fetchUsers = useCallback(async () => {
+    try {
       const res = await userService.getUsers();
       setUsers(res.data.users);
     } catch (err) {
       addToast("error", "Failed to fetch users");
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const fetchSettings = async () => {
-    try {
-      const res = await settingsService.getSettings();
-      if (res.data?.settings?.counselingStartDate) {
-        const dateStr = res.data.settings.counselingStartDate.split("T")[0];
-        setStartDate(dateStr);
-      }
-      if (res.data?.settings?.counselingDurationDays) {
-        setDurationDays(Number(res.data.settings.counselingDurationDays));
-      }
-    } catch (err) {
-      console.error("Failed to load settings", err);
-    }
-  };
+  }, [addToast]);
 
   useEffect(() => {
-    fetchUsers();
-    fetchSettings();
-  }, []);
+    const controller = new AbortController();
+    loadAdminData(controller.signal);
+    return () => controller.abort();
+  }, [loadAdminData]);
 
   const handleOpenModal = (user = null) => {
     if (user) {

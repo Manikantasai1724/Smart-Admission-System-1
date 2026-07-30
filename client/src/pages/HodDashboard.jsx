@@ -35,10 +35,11 @@ function HodDashboard() {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchSettings = async () => {
       try {
         const res = await settingsService.getSettings();
-        if (res.data?.settings?.counselingDurationDays) {
+        if (isMounted && res.data?.settings?.counselingDurationDays) {
           setCounselingDays(Number(res.data.settings.counselingDurationDays));
         }
       } catch (err) {
@@ -46,9 +47,10 @@ function HodDashboard() {
       }
     };
     fetchSettings();
+    return () => { isMounted = false; };
   }, []);
 
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async (signal) => {
     try {
       setLoading(true);
       const params = {};
@@ -56,8 +58,8 @@ function HodDashboard() {
       if (selectedDay) params.phase = selectedDay;
 
       const [statsRes, deptRes] = await Promise.all([
-        getStats(params),
-        getDepartmentProgress(selectedDay ? { phase: selectedDay } : {}),
+        getStats(params, { signal }),
+        getDepartmentProgress(selectedDay ? { phase: selectedDay } : {}, { signal }),
       ]);
       setStats(statsRes.data.stats || statsRes.data);
       const allDepts = deptRes.data.departments || deptRes.data || [];
@@ -69,58 +71,80 @@ function HodDashboard() {
         setActivities(statsRes.data.recentActivities);
       }
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      addToast('error', 'Failed to load dashboard data');
+      if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+        console.error('Error fetching dashboard data:', error);
+        addToast('error', 'Failed to load dashboard data');
+      }
     } finally {
       setLoading(false);
     }
   }, [addToast, selectedDepartment, selectedDay]);
 
-  const fetchStudentsList = useCallback(async () => {
+  const fetchStudentsList = useCallback(async (pageToFetch = currentPage, signal) => {
     try {
       setStudentsLoading(true);
       const params = {
-        page: currentPage,
+        page: pageToFetch,
         limit: 10,
         status: activeTab === 'all' ? undefined : activeTab,
       };
       if (selectedDepartment) params.department = selectedDepartment;
       if (selectedDay) params.phase = selectedDay;
 
-      const res = await studentService.getStudents(params);
+      const res = await studentService.getStudents(params, { signal });
       setStudents(res.data.students || []);
       setTotalPages(res.data.pagination?.pages || 1);
     } catch (error) {
-      console.error('Error fetching students list:', error);
+      if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+        console.error('Error fetching students list:', error);
+      }
     } finally {
       setStudentsLoading(false);
     }
   }, [selectedDepartment, selectedDay, activeTab, currentPage]);
 
   useEffect(() => {
-    fetchDashboardData();
+    const controller = new AbortController();
+    fetchDashboardData(controller.signal);
+    return () => controller.abort();
   }, [fetchDashboardData]);
 
   useEffect(() => {
-    fetchStudentsList();
-  }, [fetchStudentsList]);
+    const controller = new AbortController();
+    fetchStudentsList(currentPage, controller.signal);
+    return () => controller.abort();
+  }, [fetchStudentsList, currentPage]);
 
-  // Reset page to 1 on filter/tab changes
-  useEffect(() => {
+  const handleDepartmentChange = (dept) => {
+    setSelectedDepartment(dept);
     setCurrentPage(1);
-  }, [selectedDepartment, selectedDay, activeTab]);
+  };
+
+  const handleDayChange = (day) => {
+    setSelectedDay(day);
+    setCurrentPage(1);
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  // Socket.IO listeners for real-time updates
+  // Socket.IO listeners for real-time updates with 500ms debounce
   useEffect(() => {
     if (!socket) return;
 
+    let timer = null;
     const handleStudentUpdated = () => {
-      fetchDashboardData();
-      fetchStudentsList();
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        fetchDashboardData();
+        fetchStudentsList(currentPage);
+      }, 500);
     };
 
     const handleNewActivity = (activity) => {
@@ -131,10 +155,11 @@ function HodDashboard() {
     socket.on('activity:new', handleNewActivity);
 
     return () => {
+      if (timer) clearTimeout(timer);
       socket.off('student:updated', handleStudentUpdated);
       socket.off('activity:new', handleNewActivity);
     };
-  }, [socket, fetchDashboardData, fetchStudentsList]);
+  }, [socket, fetchDashboardData, fetchStudentsList, currentPage]);
 
   const totalStudents = stats?.total || stats?.totalStudents || 0;
   const completed = stats?.completed || stats?.completedStudents || 0;
@@ -322,7 +347,7 @@ function HodDashboard() {
               return (
                 <button
                   key={branch}
-                  onClick={() => setSelectedDepartment(branch === 'ALL' ? '' : branch)}
+                  onClick={() => handleDepartmentChange(branch === 'ALL' ? '' : branch)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                     isActive
                       ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 scale-[1.02]'
@@ -349,7 +374,7 @@ function HodDashboard() {
                 return (
                   <button
                     key={day}
-                    onClick={() => setSelectedDay(val)}
+                    onClick={() => handleDayChange(val)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                       isActive
                         ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 scale-[1.02]'
@@ -413,7 +438,7 @@ function HodDashboard() {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabChange(tab.id)}
                     className={`relative pb-3 text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 px-1 ${
                       isActive
                         ? 'text-primary-600 dark:text-primary-400 font-bold'

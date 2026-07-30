@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { CheckCircle, Clock, Loader, AlertCircle } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -41,4 +41,4 @@ function StatusBadge({ status, className = '' }) {
   );
 }
 
-export default StatusBadge;
+export default memo(StatusBadge);

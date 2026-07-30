@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, ArrowUpDown } from 'lucide-react';
 import StatusToggle from './StatusToggle';
@@ -306,4 +306,4 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
   );
 }
 
-export default StudentTable;
+export default memo(StudentTable);

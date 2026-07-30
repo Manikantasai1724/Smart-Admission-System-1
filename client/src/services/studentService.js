@@ -1,11 +1,11 @@
 import api from './api';
 
-export const getStudents = (params = {}) => {
-  return api.get('/students', { params });
+export const getStudents = (params = {}, options = {}) => {
+  return api.get('/students', { params, ...options });
 };
 
-export const getStudentById = (id) => {
-  return api.get(`/students/${id}`);
+export const getStudentById = (id, options = {}) => {
+  return api.get(`/students/${id}`, options);
 };
 
 export const uploadStudents = (formData, onUploadProgress) => {
@@ -27,8 +27,8 @@ export const deleteAllStudents = () => {
   return api.delete('/students/bulk/all');
 };
 
-export const exportStudents = (params = {}) => {
-  return api.get('/students/export/all', { params });
+export const exportStudents = (params = {}, options = {}) => {
+  return api.get('/students/export/all', { params, ...options });
 };
 
 export const generateStudentToken = (id, data) => {

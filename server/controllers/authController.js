@@ -93,7 +93,7 @@ export const login = async (req, res, next) => {
  */
 export const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select("-password").lean();
 
     if (!user) {
       return res.status(404).json({

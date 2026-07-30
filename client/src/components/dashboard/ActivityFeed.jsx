@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import { UserCheck, FileText, FilePlus, Activity } from 'lucide-react';
 import { timeAgo } from '../../utils/helpers';
 
@@ -83,4 +83,4 @@ function ActivityFeed({ activities = [] }) {
   );
 }
 
-export default ActivityFeed;
+export default memo(ActivityFeed);
