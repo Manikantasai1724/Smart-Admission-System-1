@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Users, Plus, Edit2, Trash2, ShieldCheck, Loader } from "lucide-react";
 import DashboardLayout from "../components/common/DashboardLayout";
 import userService from "../services/userService";
