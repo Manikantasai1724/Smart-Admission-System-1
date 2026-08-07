@@ -42,7 +42,6 @@ function StudentDetailPage() {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [remarks, setRemarks] = useState("");
   const [statusChanges, setStatusChanges] = useState({});
   const [auditHistory, setAuditHistory] = useState([]);
 
@@ -57,7 +56,6 @@ function StudentDetailPage() {
       ]);
       const studentData = studentRes.data.student || studentRes.data;
       setStudent(studentData);
-      setRemarks(studentData.remarks || "");
       setStatusChanges({
         selfReported: !!studentData.selfReported,
         documentsSubmitted: !!studentData.documentsSubmitted,
@@ -81,7 +79,6 @@ function StudentDetailPage() {
     try {
       await updateStudentStatus(id, {
         ...statusChanges,
-        remarks,
       });
       addToast("success", "Student status updated successfully");
       fetchStudent();
@@ -274,19 +271,7 @@ function StudentDetailPage() {
                   </div>
                 ))}
 
-                {/* Remarks */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    Remarks
-                  </label>
-                  <textarea
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    rows={3}
-                    placeholder="Add any notes or remarks..."
-                    className="glass-input w-full resize-none"
-                  />
-                </div>
+
 
                 {/* Save Button */}
                 <button

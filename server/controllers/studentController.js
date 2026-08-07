@@ -243,11 +243,11 @@ export const uploadStudents = async (req, res, next) => {
 
 /**
  * PUT /api/students/:id/status
- * Update a student's admission-step flags and/or remarks.
+ * Update a student's admission-step flags.
  */
 export const updateStudentStatus = async (req, res, next) => {
   try {
-    const { selfReported, documentsSubmitted, formFilled, remarks } = req.body;
+    const { currentStep } = req.body;
 
     const student = await Student.findById(req.params.id);
 
@@ -258,28 +258,25 @@ export const updateStudentStatus = async (req, res, next) => {
       });
     }
 
-    // Capture old values for the audit trail
     const oldValue = {
-      selfReported: student.selfReported,
-      documentsSubmitted: student.documentsSubmitted,
-      formFilled: student.formFilled,
-      remarks: student.remarks,
+      currentStep: student.currentStep,
     };
 
     // Apply updates (only overwrite fields that were explicitly sent)
-    if (selfReported !== undefined) student.selfReported = selfReported;
-    if (documentsSubmitted !== undefined)
-      student.documentsSubmitted = documentsSubmitted;
-    if (formFilled !== undefined) student.formFilled = formFilled;
-    if (remarks !== undefined) student.remarks = remarks;
+    if (currentStep !== undefined) {
+      student.currentStep = currentStep;
+      // Mark steps as completed based on currentStep
+      student.formIssuing.completed = currentStep >= 1;
+      student.certificateScan.completed = currentStep >= 2;
+      student.photoCapture.completed = currentStep >= 3;
+      student.onlineFormFilling.completed = currentStep >= 4;
+      student.reportSubmission.completed = currentStep >= 5;
+    }
 
     await student.save(); // triggers pre-save hook → completionPercentage
 
     const newValue = {
-      selfReported: student.selfReported,
-      documentsSubmitted: student.documentsSubmitted,
-      formFilled: student.formFilled,
-      remarks: student.remarks,
+      currentStep: student.currentStep,
     };
 
     // Audit log
@@ -419,10 +416,19 @@ export const generateStudentToken = async (req, res, next) => {
       parentPhone: student.parentPhone,
       tokenNumber: student.tokenNumber,
       tokenGeneratedAt: student.tokenGeneratedAt,
+      tokenDate: student.tokenDate,
     };
 
     // Get current date in YYYY-MM-DD format (IST / India Timezone)
     const todayStr = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Kolkata' }).split(' ')[0];
+
+    // Check if a token was already generated today
+    if (student.tokenDate === todayStr) {
+      return res.status(400).json({
+        success: false,
+        message: "Student has already generated a token today.",
+      });
+    }
 
     // Atomically find and increment/create daily sequence
     const counter = await DailyCounter.findOneAndUpdate(
@@ -438,6 +444,16 @@ export const generateStudentToken = async (req, res, next) => {
     student.parentPhone = parentPhone;
     student.tokenNumber = tokenNumber;
     student.tokenGeneratedAt = new Date();
+    student.tokenDate = todayStr;
+    
+    if (student.currentStep === 0) {
+      student.currentStep = 1;
+      student.formIssuing = {
+        completed: true,
+        completedBy: req.user.id,
+        completedAt: new Date()
+      };
+    }
 
     await student.save();
 
@@ -446,6 +462,7 @@ export const generateStudentToken = async (req, res, next) => {
       parentPhone: student.parentPhone,
       tokenNumber: student.tokenNumber,
       tokenGeneratedAt: student.tokenGeneratedAt,
+      tokenDate: student.tokenDate,
     };
 
     // Audit log

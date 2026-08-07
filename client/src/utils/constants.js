@@ -10,15 +10,19 @@ export const STATUS_COLORS = {
 };
 
 export const ADMISSION_STEPS = [
-  "selfReported",
-  "documentsSubmitted",
-  "formFilled",
+  "formIssuing",
+  "certificateScan",
+  "photoCapture",
+  "onlineFormFilling",
+  "reportSubmission",
 ];
 
 export const STEP_LABELS = {
-  selfReported: "Self Reporting",
-  documentsSubmitted: "Document Submission",
-  formFilled: "Form Filling",
+  formIssuing: "Form Issuing",
+  certificateScan: "Certificate Scanning",
+  photoCapture: "Photo Capture",
+  onlineFormFilling: "Online Form Filling",
+  reportSubmission: "Report Submission",
 };
 
 export const ROLES = {

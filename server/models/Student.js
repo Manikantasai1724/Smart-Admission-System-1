@@ -94,19 +94,42 @@ const studentSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    tokenDate: {
+      type: String,
+      default: null,
+    },
 
     // ── Admission step flags ──────────────────────────────────────────
-    selfReported: {
-      type: Boolean,
-      default: false,
+    formIssuing: {
+      completed: { type: Boolean, default: false },
+      completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      completedAt: { type: Date }
     },
-    documentsSubmitted: {
-      type: Boolean,
-      default: false,
+    certificateScan: {
+      completed: { type: Boolean, default: false },
+      completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      completedAt: { type: Date }
     },
-    formFilled: {
-      type: Boolean,
-      default: false,
+    photoCapture: {
+      completed: { type: Boolean, default: false },
+      completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      completedAt: { type: Date }
+    },
+    onlineFormFilling: {
+      completed: { type: Boolean, default: false },
+      completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      completedAt: { type: Date }
+    },
+    reportSubmission: {
+      completed: { type: Boolean, default: false },
+      completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      completedAt: { type: Date }
+    },
+    currentStep: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5
     },
 
     // ── Computed / derived ────────────────────────────────────────────
@@ -121,11 +144,7 @@ const studentSchema = new mongoose.Schema(
       default: null,
     },
 
-    remarks: {
-      type: String,
-      trim: true,
-      default: "",
-    },
+
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -164,27 +183,20 @@ studentSchema.index({ isActive: 1, createdAt: -1 });
 studentSchema.index({ isActive: 1, department: 1, phase: 1 });
 studentSchema.index({
   isActive: 1,
-  selfReported: 1,
-  documentsSubmitted: 1,
-  formFilled: 1,
+  currentStep: 1,
 });
 studentSchema.index({
   department: 1,
-  selfReported: 1,
-  documentsSubmitted: 1,
-  formFilled: 1,
+  currentStep: 1,
 });
 
 // ── Pre-save: compute completionPercentage & completedAt ─────────────────────
 studentSchema.pre("save", function preSaveComputeCompletion(next) {
-  const steps = [this.selfReported, this.documentsSubmitted, this.formFilled];
-  const completedSteps = steps.filter(Boolean).length;
+  this.completionPercentage = Math.round((this.currentStep / 5) * 100);
 
-  this.completionPercentage = Math.round((completedSteps / 3) * 100);
-
-  if (completedSteps === 3 && !this.completedAt) {
+  if (this.currentStep === 5 && !this.completedAt) {
     this.completedAt = new Date();
-  } else if (completedSteps < 3) {
+  } else if (this.currentStep < 5) {
     this.completedAt = null;
   }
 

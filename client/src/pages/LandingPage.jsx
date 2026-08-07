@@ -157,10 +157,7 @@ function LandingPage() {
                 <div className="w-1.5 h-1.5 rounded-full bg-srkrOrange-500" />
                 Update student verification status
               </li>
-              <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-srkrOrange-500" />
-                Add verification remarks
-              </li>
+
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-srkrOrange-500" />
                 Track overall progress

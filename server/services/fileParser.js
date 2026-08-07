@@ -81,7 +81,7 @@ const COLUMN_MAP = {
   allotted_category: "allottedCategory",
   phase: "phase",
   "phas e": "phase",
-  remarks: "remarks",
+  formFilled: "formFilled",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -227,11 +227,11 @@ Extract ALL students found in the text. For each student, extract the following 
 7. region (string, optional, e.g. AU, OU, SVU)
 8. allottedCategory (string, optional, e.g. OC_GEN_UR, OC_GEN_AU, etc.)
 9. phase (string, optional, e.g. 1, 2)
-10. remarks (string, optional)
-11. phone (string, optional, extract whatever phone number is present)
-12. email (string, optional)
-13. parentName (string, optional, father or mother's name)
-14. parentPhone (string, optional)
+10. phone (string, optional, extract whatever phone number is present)
+11. email (string, optional)
+12. parentName (string, optional, father or mother's name)
+13. parentPhone (string, optional)
+14. documentsSubmitted (boolean, optional)
 15. address (string, optional, full address or location)
 
 Return a JSON array of objects. Do not invent data. If an optional field is missing, leave it as an empty string.
@@ -260,7 +260,7 @@ ${text}
               region: { type: Type.STRING },
               allottedCategory: { type: Type.STRING },
               phase: { type: Type.STRING },
-              remarks: { type: Type.STRING },
+              formFilled: { type: Type.BOOLEAN },
               phone: { type: Type.STRING },
               email: { type: Type.STRING },
               parentName: { type: Type.STRING },

@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 function Modal({ isOpen, onClose, title, children, footer, size = 'md', closeOnOverlay = true }) {
@@ -27,8 +28,8 @@ function Modal({ isOpen, onClose, title, children, footer, size = 'md', closeOnO
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] overflow-y-auto flex items-start justify-center p-4">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-md animate-fade-in"
@@ -68,7 +69,8 @@ function Modal({ isOpen, onClose, title, children, footer, size = 'md', closeOnO
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
