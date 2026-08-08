@@ -20,8 +20,7 @@ function VolunteerDashboard() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('text'); // 'text' or 'token'
-  const [pendingStudents, setPendingStudents] = useState([]);
-  const [recentUpdates, setRecentUpdates] = useState([]);
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [stats, setStats] = useState({ pendingToday: 0, completedToday: 0 });
@@ -54,30 +53,20 @@ function VolunteerDashboard() {
 
       // If no search input is provided, restrict default listing
       if (!search.trim()) {
-        setPendingStudents([]);
-        setRecentUpdates([]);
+        setStudents([]);
         return;
       }
 
-      const params = { limit: 20, status: 'pending' };
-      const recentParams = { limit: 10, sort: '-updatedAt' };
+      const params = { limit: 20 };
       if (searchType === 'token') {
         params.tokenNumber = search;
-        recentParams.tokenNumber = search;
       } else {
         params.search = search;
-        recentParams.search = search;
       }
 
-      // Parallel execution of search queries
-      const [res, recentRes] = await Promise.all([
-        getStudents(params, { signal }),
-        getStudents(recentParams, { signal }),
-      ]);
-
-      const students = res.data.students || res.data.data || [];
-      setPendingStudents(students);
-      setRecentUpdates(recentRes.data.students || recentRes.data.data || []);
+      const res = await getStudents(params, { signal });
+      const results = res.data.students || res.data.data || [];
+      setStudents(results);
     } catch (error) {
       if (error?.name !== 'CanceledError' && error?.name !== 'AbortError') {
         console.error('Error fetching students:', error);
@@ -121,12 +110,7 @@ function VolunteerDashboard() {
       await updateStudentStatus(studentId, { [field]: value });
 
       // Update local state
-      setPendingStudents(prev =>
-        prev.map(s =>
-          (s._id === studentId || s.id === studentId) ? { ...s, [field]: value } : s
-        )
-      );
-      setRecentUpdates(prev =>
+      setStudents(prev =>
         prev.map(s =>
           (s._id === studentId || s.id === studentId) ? { ...s, [field]: value } : s
         )
@@ -139,12 +123,7 @@ function VolunteerDashboard() {
   };
 
   const handleTokenGenerated = (studentId, updatedStudent) => {
-    setPendingStudents(prev =>
-      prev.map(s =>
-        (s._id === studentId || s.id === studentId) ? { ...s, ...updatedStudent } : s
-      )
-    );
-    setRecentUpdates(prev =>
+    setStudents(prev =>
       prev.map(s =>
         (s._id === studentId || s.id === studentId) ? { ...s, ...updatedStudent } : s
       )
@@ -233,15 +212,15 @@ function VolunteerDashboard() {
         <LoadingSpinner message="Searching students..." />
       ) : (
         <div className="space-y-8">
-          {/* Pending Students Grid */}
+          {/* Search Results Grid */}
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-amber-500" />
-              Pending Search Results ({pendingStudents.length})
+              <Search className="w-5 h-5 text-primary-500" />
+              Search Results ({students.length})
             </h2>
-            {pendingStudents.length > 0 ? (
+            {students.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {pendingStudents.map(student => (
+                {students.map(student => (
                   <StudentCard
                     key={student._id || student.id}
                     student={student}
@@ -253,33 +232,13 @@ function VolunteerDashboard() {
             ) : (
               <div className="glass-card p-8 text-center">
                 <XCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-                <p className="text-gray-500 dark:text-gray-400 font-medium">No pending students found</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium">No students found</p>
                 <p className="text-sm text-gray-400 dark:text-gray-500">
-                  We couldn't find any pending student details matching "{searchTerm}"
+                  We couldn't find any student details matching "{searchTerm}"
                 </p>
               </div>
             )}
           </div>
-
-          {/* Recent Updates Matching Grid */}
-          {recentUpdates.length > 0 && (
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-emerald-500" />
-                Recently Updated Matches ({recentUpdates.length})
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {recentUpdates.map(student => (
-                  <StudentCard
-                    key={student._id || student.id}
-                    student={student}
-                    onStatusChange={handleStatusChange}
-                    onTokenGenerated={handleTokenGenerated}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
     </DashboardLayout>
