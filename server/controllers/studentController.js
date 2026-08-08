@@ -94,6 +94,14 @@ export const getStudents = async (req, res, next) => {
       const tokenNum = parseInt(req.query.tokenNumber, 10);
       if (!Number.isNaN(tokenNum)) {
         filter.tokenNumber = tokenNum;
+        
+        // Scope search to today's date if tokenDate is not explicitly provided
+        if (req.query.tokenDate) {
+          filter.tokenDate = req.query.tokenDate;
+        } else {
+          // Use IST timezone current date
+          filter.tokenDate = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Kolkata' }).split(' ')[0];
+        }
       }
     }
 
@@ -422,9 +430,9 @@ export const generateStudentToken = async (req, res, next) => {
       });
     }
 
-    // Atomically find and increment/create global sequence
+    // Atomically find and increment/create daily sequence
     const counter = await DailyCounter.findOneAndUpdate(
-      { date: 'GLOBAL_TOKEN_SEQUENCE' },
+      { date: todayStr },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
