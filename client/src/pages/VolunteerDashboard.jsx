@@ -135,7 +135,7 @@ function VolunteerDashboard() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-          {getGreeting()}, <span className="gradient-text">Volunteer</span>
+          {getGreeting()}, <span className="gradient-text">{user?.name || 'Volunteer'}</span>
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           Track and update student admission progress
