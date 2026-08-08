@@ -214,14 +214,14 @@ function HodDashboard() {
 
       // Group students by status (Completed first, then Pending)
       const sortedStudents = [...students].sort((a, b) => {
-        const aComp = a.selfReported && a.documentsSubmitted && a.formFilled;
-        const bComp = b.selfReported && b.documentsSubmitted && b.formFilled;
+        const aComp = a.currentStep === 5;
+        const bComp = b.currentStep === 5;
         if (aComp === bComp) return 0;
         return aComp ? -1 : 1;
       });
 
       const data = sortedStudents.map(student => {
-        const isCompleted = student.selfReported && student.documentsSubmitted && student.formFilled;
+        const isCompleted = student.currentStep === 5;
         return {
           'Hall Ticket Number': student.hallTicketNumber || '—',
           'Name': student.name || '—',
@@ -230,9 +230,7 @@ function HodDashboard() {
           'Parent Phone': student.parentPhone || '—',
           'Department': student.department || '—',
           'Rank': student.rank || '—',
-          'Self Reported': student.selfReported ? 'Yes' : 'No',
-          'Documents Submitted': student.documentsSubmitted ? 'Yes' : 'No',
-          'Form Filled': student.formFilled ? 'Yes' : 'No',
+          'Current Step': student.currentStep || 0,
           'Status': isCompleted ? 'Completed' : 'Pending',
           'Completion Date & Time': isCompleted && student.completedAt ? formatDate(student.completedAt) : '—',
         };
@@ -261,14 +259,14 @@ function HodDashboard() {
 
       // Group students by status (Completed first, then Pending)
       const sortedStudents = [...students].sort((a, b) => {
-        const aComp = a.selfReported && a.documentsSubmitted && a.formFilled;
-        const bComp = b.selfReported && b.documentsSubmitted && b.formFilled;
+        const aComp = a.currentStep === 5;
+        const bComp = b.currentStep === 5;
         if (aComp === bComp) return 0;
         return aComp ? -1 : 1;
       });
 
       const data = sortedStudents.map(student => {
-        const isCompleted = student.selfReported && student.documentsSubmitted && student.formFilled;
+        const isCompleted = student.currentStep === 5;
         return {
           'Hall Ticket Number': student.hallTicketNumber || '—',
           'Name': student.name || '—',
@@ -311,7 +309,7 @@ function HodDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-            {getGreeting()}, <span className="gradient-text">{user?.name || 'Admin'}</span>
+            {getGreeting()}, <span className="gradient-text">HOD</span>
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
             Here&apos;s your admission overview for today

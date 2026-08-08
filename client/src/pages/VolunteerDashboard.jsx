@@ -26,25 +26,31 @@ function VolunteerDashboard() {
   const [updatingId, setUpdatingId] = useState(null);
   const [stats, setStats] = useState({ pendingToday: 0, completedToday: 0 });
 
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  const debouncedSearch = useDebounce(searchTerm, 800);
 
   // Clear search term when search type changes
   useEffect(() => {
     setSearchTerm('');
   }, [searchType]);
 
-  const fetchStudents = useCallback(async (search = '', signal) => {
+  const fetchStats = useCallback(async (signal) => {
     try {
-      setLoading(true);
-
-      // Always fetch true global stats from dashboard API
       const statsRes = await getStats({}, { signal });
       const globalStats = statsRes.data.stats || statsRes.data;
-      
       setStats({ 
         pendingToday: globalStats.pendingStudents, 
         completedToday: globalStats.completedStudents 
       });
+    } catch (error) {
+      if (error?.name !== 'CanceledError' && error?.name !== 'AbortError') {
+        console.error('Error fetching stats:', error);
+      }
+    }
+  }, []);
+
+  const fetchStudents = useCallback(async (search = '', showLoader = true, signal) => {
+    try {
+      if (showLoader) setLoading(true);
 
       // If no search input is provided, restrict default listing
       if (!search.trim()) {
@@ -73,20 +79,21 @@ function VolunteerDashboard() {
       setPendingStudents(students);
       setRecentUpdates(recentRes.data.students || recentRes.data.data || []);
     } catch (error) {
-      if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+      if (error?.name !== 'CanceledError' && error?.name !== 'AbortError') {
         console.error('Error fetching students:', error);
         addToast('error', 'Failed to load student data');
       }
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, [addToast, searchType]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchStudents(debouncedSearch, controller.signal);
+    fetchStats(controller.signal);
+    fetchStudents(debouncedSearch, true, controller.signal);
     return () => controller.abort();
-  }, [debouncedSearch, fetchStudents]);
+  }, [debouncedSearch, fetchStudents, fetchStats]);
 
   // Socket.IO for live updates with 500ms debounce
   useEffect(() => {
@@ -96,7 +103,8 @@ function VolunteerDashboard() {
     const handleUpdate = () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
-        fetchStudents(debouncedSearch);
+        fetchStats();
+        fetchStudents(debouncedSearch, false);
       }, 500);
     };
 
@@ -111,7 +119,6 @@ function VolunteerDashboard() {
     setUpdatingId(studentId);
     try {
       await updateStudentStatus(studentId, { [field]: value });
-      addToast('success', `${STEP_LABELS[field]} ${value ? 'completed' : 'reverted'}`);
 
       // Update local state
       setPendingStudents(prev =>
@@ -149,7 +156,7 @@ function VolunteerDashboard() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-          {getGreeting()}, <span className="gradient-text">{user?.name || 'Volunteer'}</span>
+          {getGreeting()}, <span className="gradient-text">Volunteer</span>
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           Track and update student admission progress

@@ -4,22 +4,34 @@ import { formatDate } from '../../utils/helpers';
 
 const TIMELINE_STEPS = [
   {
-    key: 'selfReported',
-    label: 'Self Reporting',
-    description: 'Student has self-reported to the college',
-    icon: UserCheck,
-  },
-  {
-    key: 'documentsSubmitted',
-    label: 'Document Submission',
-    description: 'All required documents have been submitted and verified',
+    key: 'formIssuing',
+    label: 'Form Issuing',
+    description: 'Admission form issued to student',
     icon: FileText,
   },
   {
-    key: 'formFilled',
-    label: 'Form Filling',
-    description: 'Admission form has been completed and signed',
+    key: 'certificateScan',
+    label: 'Certificate Scanning',
+    description: 'Student certificates have been scanned',
+    icon: UserCheck,
+  },
+  {
+    key: 'photoCapture',
+    label: 'Photo Capture',
+    description: 'Student photo has been captured',
+    icon: UserCheck,
+  },
+  {
+    key: 'onlineFormFilling',
+    label: 'Online Form Filling',
+    description: 'Online admission details filled',
     icon: FilePlus,
+  },
+  {
+    key: 'reportSubmission',
+    label: 'Report Submission',
+    description: 'Final report submitted successfully',
+    icon: CheckCircle,
   },
 ];
 
@@ -33,11 +45,11 @@ function StudentTimeline({ student }) {
       </h3>
       <div className="relative">
         {TIMELINE_STEPS.map((step, index) => {
-          const isCompleted = !!student[step.key];
+          const isCompleted = student.currentStep > index || student[step.key]?.completed;
           const isLast = index === TIMELINE_STEPS.length - 1;
           const Icon = step.icon;
-          const updatedBy = student[`${step.key}By`];
-          const updatedAt = student[`${step.key}At`] || (isCompleted ? student.updatedAt : null);
+          const updatedBy = student[step.key]?.completedBy;
+          const updatedAt = student[step.key]?.completedAt || (isCompleted ? student.updatedAt : null);
 
           return (
             <div key={step.key} className="relative flex gap-4 pb-8 last:pb-0">

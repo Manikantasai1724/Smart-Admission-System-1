@@ -48,22 +48,13 @@ export const getStudents = async (req, res, next) => {
     if (req.query.status) {
       switch (req.query.status) {
         case "completed":
-          filter.selfReported = true;
-          filter.documentsSubmitted = true;
-          filter.formFilled = true;
+          filter.currentStep = 5;
           break;
         case "pending":
-          filter.$or = [
-            { selfReported: false },
-            { documentsSubmitted: false },
-            { formFilled: false }
-          ];
+          filter.currentStep = { $lt: 5 };
           break;
         case "in-progress":
-          filter.$and = [
-            { $or: [{ selfReported: true }, { documentsSubmitted: true }, { formFilled: true }] },
-            { $or: [{ selfReported: false }, { documentsSubmitted: false }, { formFilled: false }] }
-          ];
+          filter.currentStep = { $gt: 0, $lt: 5 };
           break;
         default:
           break;
@@ -89,7 +80,8 @@ export const getStudents = async (req, res, next) => {
 
     // Phone filter (phone or parentPhone)
     if (req.query.phone) {
-      const phoneRegex = { $regex: req.query.phone, $options: "i" };
+      const escapedPhone = req.query.phone.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const phoneRegex = { $regex: `^${escapedPhone}`, $options: "i" };
       filter.$or = [
         { phone: phoneRegex },
         { parentPhone: phoneRegex },
@@ -422,17 +414,17 @@ export const generateStudentToken = async (req, res, next) => {
     // Get current date in YYYY-MM-DD format (IST / India Timezone)
     const todayStr = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Kolkata' }).split(' ')[0];
 
-    // Check if a token was already generated today
-    if (student.tokenDate === todayStr) {
+    // Check if a token was already generated
+    if (student.tokenNumber) {
       return res.status(400).json({
         success: false,
-        message: "Student has already generated a token today.",
+        message: "Student already has a token number.",
       });
     }
 
-    // Atomically find and increment/create daily sequence
+    // Atomically find and increment/create global sequence
     const counter = await DailyCounter.findOneAndUpdate(
-      { date: todayStr },
+      { date: 'GLOBAL_TOKEN_SEQUENCE' },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );

@@ -49,15 +49,30 @@ export const buildSearchQuery = (query) => {
   }
 
   const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(escaped, "i");
+  
+  // Use a prefix regex for indexed string fields where applicable
+  const prefixRegex = new RegExp("^" + escaped, "i");
+  const containsRegex = new RegExp(escaped, "i");
 
-  const conditions = [
-    { name: regex },
-    { hallTicketNumber: regex },
-    { phone: regex },
-    { parentPhone: regex },
-    { email: regex },
-  ];
+  // Check if it's a number-like string (e.g. for phone or hall ticket)
+  const isPhoneSearch = /^[\d\+\-\s]+$/.test(trimmed);
 
-  return { $or: conditions };
+  if (isPhoneSearch) {
+    return {
+      $or: [
+        { hallTicketNumber: containsRegex },
+        { phone: containsRegex },
+        { parentPhone: containsRegex }
+      ]
+    };
+  }
+
+  return {
+    $or: [
+      { name: prefixRegex },
+      { name: containsRegex }, // Fallback for mid-string matching, though slower
+      { hallTicketNumber: prefixRegex },
+      { email: prefixRegex },
+    ]
+  };
 };

@@ -60,14 +60,14 @@ function Navbar({ onToggleSidebar }) {
             <div className="hidden sm:flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 leading-tight">
-                  {user?.name || 'User'}
+                  {user?.role === 'hod' ? 'HOD' : 'Volunteer'}
                 </p>
                 <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${getRoleBadgeColor(user?.role)}`}>
-                  {user?.role === 'hod' ? 'HOD' : 'Volunteer'}
+                  {user?.role === 'hod' ? 'Head of Dept' : 'Staff'}
                 </span>
               </div>
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
-                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                {user?.role === 'hod' ? 'H' : 'V'}
               </div>
             </div>
 

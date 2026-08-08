@@ -19,6 +19,12 @@ const renderAction = (log) => {
       if (log.oldValue.selfReported && !log.newValue.selfReported) changes.push("Unmarked Self Reported");
       if (log.oldValue.documentsSubmitted && !log.newValue.documentsSubmitted) changes.push("Unmarked Documents Submitted");
       if (log.oldValue.formFilled && !log.newValue.formFilled) changes.push("Unmarked Form Filled");
+
+      if (log.oldValue.currentStep !== undefined && log.newValue.currentStep !== undefined) {
+        if (log.oldValue.currentStep !== log.newValue.currentStep) {
+          changes.push(`Updated to Step ${log.newValue.currentStep}`);
+        }
+      }
     }
     
     if (changes.length > 0) {

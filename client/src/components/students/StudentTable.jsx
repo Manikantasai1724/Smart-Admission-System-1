@@ -4,7 +4,7 @@ import { Eye, ArrowUpDown } from 'lucide-react';
 import StatusToggle from './StatusToggle';
 import StatusBadge from '../common/StatusBadge';
 import { calculateCompletionPercentage, getStatusLabel } from '../../utils/helpers';
-import { STEP_LABELS } from '../../utils/constants';
+import { STEP_LABELS, ADMISSION_STEPS } from '../../utils/constants';
 import { useAuth } from '../../context/AuthContext';
 
 function StudentTable({ students = [], onStatusChange, loading = false, sortConfig, onSort }) {
@@ -82,43 +82,24 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
               </div>
 
               {/* Status Checklist */}
-              <div className="grid grid-cols-3 gap-2 py-2 border-t border-b border-gray-100 dark:border-primary-400/5">
-                <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-50/50 dark:bg-primary-950/20" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-[10px] text-gray-400 mb-1">{STEP_LABELS.selfReported}</span>
-                  {canEdit ? (
-                    <StatusToggle
-                      checked={!!student.selfReported}
-                      onChange={(val) => onStatusChange?.(student._id || student.id, 'selfReported', val)}
-                      label=""
-                    />
-                  ) : (
-                    <StatusBadge status={student.selfReported ? 'completed' : 'pending'} />
-                  )}
-                </div>
-                <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-50/50 dark:bg-primary-950/20" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-[10px] text-gray-400 mb-1">{STEP_LABELS.documentsSubmitted}</span>
-                  {canEdit ? (
-                    <StatusToggle
-                      checked={!!student.documentsSubmitted}
-                      onChange={(val) => onStatusChange?.(student._id || student.id, 'documentsSubmitted', val)}
-                      label=""
-                    />
-                  ) : (
-                    <StatusBadge status={student.documentsSubmitted ? 'completed' : 'pending'} />
-                  )}
-                </div>
-                <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-50/50 dark:bg-primary-950/20" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-[10px] text-gray-400 mb-1">{STEP_LABELS.formFilled}</span>
-                  {canEdit ? (
-                    <StatusToggle
-                      checked={!!student.formFilled}
-                      onChange={(val) => onStatusChange?.(student._id || student.id, 'formFilled', val)}
-                      label=""
-                    />
-                  ) : (
-                    <StatusBadge status={student.formFilled ? 'completed' : 'pending'} />
-                  )}
-                </div>
+              <div className="grid grid-cols-2 gap-2 py-2 border-t border-b border-gray-100 dark:border-primary-400/5">
+                {ADMISSION_STEPS.map((step, stepIndex) => {
+                  const isChecked = student.currentStep > stepIndex;
+                  return (
+                    <div key={step} className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-50/50 dark:bg-primary-950/20" onClick={(e) => e.stopPropagation()}>
+                      <span className="text-[10px] text-gray-400 mb-1">{STEP_LABELS[step]}</span>
+                      {canEdit ? (
+                        <StatusToggle
+                          checked={isChecked}
+                          onChange={(val) => onStatusChange?.(student._id || student.id, 'currentStep', val ? stepIndex + 1 : stepIndex)}
+                          label=""
+                        />
+                      ) : (
+                        <StatusBadge status={isChecked ? 'completed' : 'pending'} />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Actions Footer */}
@@ -133,13 +114,10 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                 {canEdit && (
                   <button
                     onClick={() => {
-                      const isComplete = completion >= 100;
-                      const newStatus = !isComplete;
-                      onStatusChange?.(student._id || student.id, {
-                        selfReported: newStatus,
-                        documentsSubmitted: newStatus,
-                        formFilled: newStatus
-                      });
+                        const isComplete = completion >= 100;
+                        onStatusChange?.(student._id || student.id, {
+                          currentStep: isComplete ? 0 : 5
+                        });
                     }}
                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
                       completion >= 100
@@ -174,21 +152,13 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                 <th className="text-left px-4 py-3.5">
                   <SortHeader label="Department" sortKey="department" />
                 </th>
-                <th className="text-center px-4 py-3.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    {STEP_LABELS.selfReported}
-                  </span>
-                </th>
-                <th className="text-center px-4 py-3.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    {STEP_LABELS.documentsSubmitted}
-                  </span>
-                </th>
-                <th className="text-center px-4 py-3.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    {STEP_LABELS.formFilled}
-                  </span>
-                </th>
+                {ADMISSION_STEPS.map((step) => (
+                  <th key={step} className="text-center px-4 py-3.5">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      {STEP_LABELS[step]}
+                    </span>
+                  </th>
+                ))}
                 <th className="text-center px-4 py-3.5">
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</span>
                 </th>
@@ -237,50 +207,30 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                         {student.department || '—'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                      {canEdit ? (
-                        <StatusToggle
-                          checked={!!student.selfReported}
-                          onChange={(val) => onStatusChange?.(student._id || student.id, 'selfReported', val)}
-                          label=""
-                        />
-                      ) : (
-                        <StatusBadge status={student.selfReported ? 'completed' : 'pending'} />
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                      {canEdit ? (
-                        <StatusToggle
-                          checked={!!student.documentsSubmitted}
-                          onChange={(val) => onStatusChange?.(student._id || student.id, 'documentsSubmitted', val)}
-                          label=""
-                        />
-                      ) : (
-                        <StatusBadge status={student.documentsSubmitted ? 'completed' : 'pending'} />
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                      {canEdit ? (
-                        <StatusToggle
-                          checked={!!student.formFilled}
-                          onChange={(val) => onStatusChange?.(student._id || student.id, 'formFilled', val)}
-                          label=""
-                        />
-                      ) : (
-                        <StatusBadge status={student.formFilled ? 'completed' : 'pending'} />
-                      )}
-                    </td>
+                    {ADMISSION_STEPS.map((step, stepIndex) => {
+                      const isChecked = student.currentStep > stepIndex;
+                      return (
+                        <td key={step} className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          {canEdit ? (
+                            <StatusToggle
+                              checked={isChecked}
+                              onChange={(val) => onStatusChange?.(student._id || student.id, 'currentStep', val ? stepIndex + 1 : stepIndex)}
+                              label=""
+                            />
+                          ) : (
+                            <StatusBadge status={isChecked ? 'completed' : 'pending'} />
+                          )}
+                        </td>
+                      );
+                    })}
                     <td className="px-4 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       {canEdit ? (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             const isComplete = completion >= 100;
-                            const newStatus = !isComplete;
                             onStatusChange?.(student._id || student.id, {
-                              selfReported: newStatus,
-                              documentsSubmitted: newStatus,
-                              formFilled: newStatus
+                              currentStep: isComplete ? 0 : 5
                             });
                           }}
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${

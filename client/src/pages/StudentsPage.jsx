@@ -304,12 +304,12 @@ function StudentsPage() {
                   
                   <DetailItem 
                     label="Admission Status" 
-                    value={selectedStudent.selfReported && selectedStudent.documentsSubmitted && selectedStudent.formFilled ? "Completed" : "Pending"} 
+                    value={selectedStudent.currentStep === 5 ? "Completed" : "Pending"} 
                     isBadge 
                   />
                   <DetailItem 
                     label="Verification Status" 
-                    value={selectedStudent.documentsSubmitted ? "Verified" : "Pending"} 
+                    value={selectedStudent.currentStep >= 2 ? "Verified" : "Pending"} 
                     isBadge 
                   />
                   

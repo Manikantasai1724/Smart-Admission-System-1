@@ -57,9 +57,7 @@ function StudentDetailPage() {
       const studentData = studentRes.data.student || studentRes.data;
       setStudent(studentData);
       setStatusChanges({
-        selfReported: !!studentData.selfReported,
-        documentsSubmitted: !!studentData.documentsSubmitted,
-        formFilled: !!studentData.formFilled,
+        currentStep: studentData.currentStep || 0,
       });
       setAuditHistory(logsRes.data.logs || logsRes.data || []);
     } catch (error) {
@@ -78,7 +76,7 @@ function StudentDetailPage() {
     setSaving(true);
     try {
       await updateStudentStatus(id, {
-        ...statusChanges,
+        currentStep: statusChanges.currentStep,
       });
       addToast("success", "Student status updated successfully");
       fetchStudent();
@@ -89,8 +87,8 @@ function StudentDetailPage() {
     }
   };
 
-  const handleToggle = (field, value) => {
-    setStatusChanges((prev) => ({ ...prev, [field]: value }));
+  const handleToggle = (index, value) => {
+    setStatusChanges({ currentStep: value ? index + 1 : index });
   };
 
   if (loading) {
@@ -119,11 +117,7 @@ function StudentDetailPage() {
     );
   }
 
-  const completion = calculateCompletionPercentage({
-    selfReported: statusChanges.selfReported,
-    documentsSubmitted: statusChanges.documentsSubmitted,
-    formFilled: statusChanges.formFilled,
-  });
+  const completion = (statusChanges.currentStep / 5) * 100;
 
   return (
     <DashboardLayout>
@@ -255,21 +249,30 @@ function StudentDetailPage() {
                 Update Status
               </h3>
               <div className="space-y-4">
-                {ADMISSION_STEPS.map((step) => (
-                  <div
-                    key={step}
-                    className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 dark:bg-white/[0.02]"
-                  >
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {STEP_LABELS[step]}
-                    </span>
-                    <StatusToggle
-                      checked={statusChanges[step]}
-                      onChange={(val) => handleToggle(step, val)}
-                      label={statusChanges[step] ? "Done" : "Pending"}
-                    />
-                  </div>
-                ))}
+                {ADMISSION_STEPS.map((step, index) => {
+                  const isChecked = statusChanges.currentStep > index;
+                  // Only allow toggling the exact next pending step, or reverting the exact last completed step
+                  const isDisabled = index > statusChanges.currentStep || index < statusChanges.currentStep - 1;
+
+                  return (
+                    <div
+                      key={step}
+                      className={`flex items-center justify-between p-3 rounded-xl transition-colors ${
+                        isDisabled ? 'bg-gray-50/20 dark:bg-white/[0.01] opacity-50' : 'bg-gray-50/50 dark:bg-white/[0.02]'
+                      }`}
+                    >
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {STEP_LABELS[step]}
+                      </span>
+                      <StatusToggle
+                        checked={isChecked}
+                        onChange={(val) => !isDisabled && handleToggle(index, val)}
+                        label={isChecked ? "Done" : "Pending"}
+                        disabled={isDisabled}
+                      />
+                    </div>
+                  );
+                })}
 
 
 
@@ -296,7 +299,7 @@ function StudentDetailPage() {
           )}
 
           {/* Audit History */}
-          {auditHistory.length > 0 && (
+          {user?.role?.toLowerCase() !== 'hod' && auditHistory.length > 0 && (
             <div className="glass-card p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Change History

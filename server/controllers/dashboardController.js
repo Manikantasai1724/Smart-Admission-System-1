@@ -38,43 +38,19 @@ export const getStats = async (req, res, next) => {
             _id: null,
             totalStudents: { $sum: 1 },
             completedStudents: {
-              $sum: {
-                $cond: [
-                  {
-                    $and: [
-                      { $eq: ['$selfReported', true] },
-                      { $eq: ['$documentsSubmitted', true] },
-                      { $eq: ['$formFilled', true] },
-                    ],
-                  },
-                  1,
-                  0,
-                ],
-              },
+              $sum: { $cond: [{ $eq: ['$currentStep', 5] }, 1, 0] },
             },
             pendingStudents: {
-              $sum: {
-                $cond: [
-                  {
-                    $or: [
-                      { $eq: ['$selfReported', false] },
-                      { $eq: ['$documentsSubmitted', false] },
-                      { $eq: ['$formFilled', false] },
-                    ],
-                  },
-                  1,
-                  0,
-                ],
-              },
+              $sum: { $cond: [{ $lt: ['$currentStep', 5] }, 1, 0] },
             },
             selfReportedCount: {
-              $sum: { $cond: [{ $eq: ['$selfReported', true] }, 1, 0] },
+              $sum: { $cond: [{ $gte: ['$currentStep', 1] }, 1, 0] },
             },
             documentsSubmittedCount: {
-              $sum: { $cond: [{ $eq: ['$documentsSubmitted', true] }, 1, 0] },
+              $sum: { $cond: [{ $gte: ['$currentStep', 2] }, 1, 0] },
             },
             formFilledCount: {
-              $sum: { $cond: [{ $eq: ['$formFilled', true] }, 1, 0] },
+              $sum: { $cond: [{ $gte: ['$currentStep', 4] }, 1, 0] },
             },
             todayCount: {
               $sum: {
@@ -145,34 +121,10 @@ export const getDepartmentProgress = async (req, res, next) => {
           _id: '$department',
           total: { $sum: 1 },
           completed: {
-            $sum: {
-              $cond: [
-                {
-                  $and: [
-                    { $eq: ['$selfReported', true] },
-                    { $eq: ['$documentsSubmitted', true] },
-                    { $eq: ['$formFilled', true] },
-                  ],
-                },
-                1,
-                0,
-              ],
-            },
+            $sum: { $cond: [{ $eq: ['$currentStep', 5] }, 1, 0] },
           },
           pending: {
-            $sum: {
-              $cond: [
-                {
-                  $or: [
-                    { $eq: ['$selfReported', false] },
-                    { $eq: ['$documentsSubmitted', false] },
-                    { $eq: ['$formFilled', false] },
-                  ],
-                },
-                1,
-                0,
-              ],
-            },
+            $sum: { $cond: [{ $lt: ['$currentStep', 5] }, 1, 0] },
           },
         },
       },

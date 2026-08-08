@@ -71,18 +71,9 @@ export function getStatusLabel(percentage) {
   return 'Pending';
 }
 
-/**
- * Calculate completion percentage from 3 boolean fields
- */
 export function calculateCompletionPercentage(student) {
   if (!student) return 0;
-  const steps = [
-    student.selfReported,
-    student.documentsSubmitted,
-    student.formFilled,
-  ];
-  const completed = steps.filter(Boolean).length;
-  return Math.round((completed / 3) * 100);
+  return Math.round(((student.currentStep || 0) / 5) * 100);
 }
 
 export async function exportToExcel(data, filename = 'export') {

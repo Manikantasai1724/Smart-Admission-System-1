@@ -173,8 +173,9 @@ const studentSchema = new mongoose.Schema(
 studentSchema.index({ rank: 1 });
 studentSchema.index({ department: 1 });
 studentSchema.index({ email: 1 });
+studentSchema.index({ name: 1 }); // Regular index for fast prefix regex search
 studentSchema.index({ name: "text" }); // text search
-studentSchema.index({ tokenNumber: 1 });
+studentSchema.index({ tokenNumber: 1 }, { unique: true, sparse: true });
 studentSchema.index({ phone: 1 });
 studentSchema.index({ parentPhone: 1 });
 studentSchema.index({ createdAt: -1 });
