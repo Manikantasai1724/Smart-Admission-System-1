@@ -264,23 +264,25 @@ export const updateStudentStatus = async (req, res, next) => {
       student.currentStep = currentStep;
       
       const now = new Date();
-      const updateStep = (stepObj, isCompleted) => {
+      const updateStep = (stepObj, stepName, isCompleted) => {
         if (isCompleted && !stepObj.completed) {
           stepObj.completed = true;
           stepObj.completedAt = now;
           stepObj.completedBy = req.user.id;
+          student.markModified(stepName);
         } else if (!isCompleted && stepObj.completed) {
           stepObj.completed = false;
           stepObj.completedAt = undefined;
           stepObj.completedBy = undefined;
+          student.markModified(stepName);
         }
       };
 
-      updateStep(student.formIssuing, currentStep >= 1);
-      updateStep(student.certificateScan, currentStep >= 2);
-      updateStep(student.photoCapture, currentStep >= 3);
-      updateStep(student.onlineFormFilling, currentStep >= 4);
-      updateStep(student.reportSubmission, currentStep >= 5);
+      updateStep(student.formIssuing, 'formIssuing', currentStep >= 1);
+      updateStep(student.certificateScan, 'certificateScan', currentStep >= 2);
+      updateStep(student.photoCapture, 'photoCapture', currentStep >= 3);
+      updateStep(student.onlineFormFilling, 'onlineFormFilling', currentStep >= 4);
+      updateStep(student.reportSubmission, 'reportSubmission', currentStep >= 5);
     }
 
     await student.save(); // triggers pre-save hook → completionPercentage
