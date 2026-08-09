@@ -280,7 +280,7 @@ ${text}
       const std = normalizeRow(record);
       if (std) results.push(std);
     }
-
+    console.log("Extracted using gemini..........")
     return results;
   } catch (error) {
     console.error("Gemini API extraction failed:", error);

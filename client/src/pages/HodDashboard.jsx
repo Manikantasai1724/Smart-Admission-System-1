@@ -161,10 +161,12 @@ function HodDashboard() {
     };
   }, [socket, fetchDashboardData, fetchStudentsList, currentPage]);
 
-  const totalStudents = stats?.total || stats?.totalStudents || 0;
-  const completed = stats?.completed || stats?.completedStudents || 0;
-  const pending = stats?.pending || stats?.pendingStudents || totalStudents - completed;
-  const completionRate = totalStudents > 0 ? Math.round((completed / totalStudents) * 100) : 0;
+  const overallTotal = stats?.overallTotal ?? 0;
+  const totalStudents = stats?.total ?? stats?.totalStudents ?? 0;
+  const completed = stats?.completed ?? stats?.completedStudents ?? 0;
+  const pending = stats?.pending ?? stats?.pendingStudents ?? 0;
+  const visited = pending + completed;
+  const completionRate = overallTotal > 0 ? Math.round((completed / overallTotal) * 100) : 0;
 
   const pieData = [
     { name: 'Completed', value: completed },
@@ -400,27 +402,34 @@ function HodDashboard() {
       ) : (
         <div className="space-y-6 stagger-children">
           {/* Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
-              title="Total Students"
-              value={totalStudents}
+              title="Total Students (All)"
+              value={overallTotal}
               icon={Users}
               color="primary"
               delay={0}
+            />
+            <StatCard
+              title={selectedDay ? `Visited (Day ${selectedDay})` : "Visited (All Days)"}
+              value={visited}
+              icon={Users}
+              color="info"
+              delay={100}
             />
             <StatCard
               title="Pending"
               value={pending}
               icon={Clock}
               color="warning"
-              delay={100}
+              delay={200}
             />
             <StatCard
               title="Completed"
               value={completed}
               icon={CheckCircle}
               color="success"
-              delay={200}
+              delay={300}
             />
           </div>
 

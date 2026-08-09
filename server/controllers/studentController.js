@@ -51,9 +51,6 @@ export const getStudents = async (req, res, next) => {
           filter.currentStep = 5;
           break;
         case "pending":
-          filter.currentStep = { $lt: 5 };
-          break;
-        case "in-progress":
           filter.currentStep = { $gt: 0, $lt: 5 };
           break;
         default:
@@ -377,6 +374,7 @@ export const deleteAllStudents = async (req, res, next) => {
   try {
     await Student.deleteMany({});
     await AuditLog.deleteMany({}); // optionally clear student audit logs
+    await DailyCounter.deleteMany({}); // Clear daily counters as well
     emitDashboardRefresh();
     res.status(200).json({
       success: true,
@@ -420,7 +418,13 @@ export const generateStudentToken = async (req, res, next) => {
     };
 
     // Get current date in YYYY-MM-DD format (IST / India Timezone)
-    const todayStr = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Kolkata' }).split(' ')[0];
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const todayStr = formatter.format(new Date());
 
     // Check if a token was already generated
     if (student.tokenNumber) {

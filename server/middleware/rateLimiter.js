@@ -11,7 +11,7 @@ import rateLimit from 'express-rate-limit';
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
+  max: 50,
   standardHeaders: true, // Return rate limit info in RateLimit-* headers
   legacyHeaders: false,  // Disable X-RateLimit-* headers
   message: {

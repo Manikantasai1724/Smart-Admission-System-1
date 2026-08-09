@@ -30,7 +30,12 @@ export const getStats = async (req, res, next) => {
     startOfDay.setHours(0, 0, 0, 0);
 
     // ── Single Pass Aggregation + Parallel Audit Log Query ─────────────
-    const [statsAggregate, recentActivity] = await Promise.all([
+    const overallFilter = { isActive: true };
+    if (req.query.department) {
+      overallFilter.department = req.query.department;
+    }
+
+    const [statsAggregate, recentActivity, overallTotal] = await Promise.all([
       Student.aggregate([
         { $match: baseFilter },
         {
@@ -41,7 +46,7 @@ export const getStats = async (req, res, next) => {
               $sum: { $cond: [{ $eq: ['$currentStep', 5] }, 1, 0] },
             },
             pendingStudents: {
-              $sum: { $cond: [{ $lt: ['$currentStep', 5] }, 1, 0] },
+              $sum: { $cond: [{ $and: [{ $gt: ['$currentStep', 0] }, { $lt: ['$currentStep', 5] }] }, 1, 0] },
             },
             selfReportedCount: {
               $sum: { $cond: [{ $gte: ['$currentStep', 1] }, 1, 0] },
@@ -70,6 +75,7 @@ export const getStats = async (req, res, next) => {
         .populate('studentId', 'name hallTicketNumber department')
         .populate('updatedBy', 'name email')
         .lean(),
+      Student.countDocuments(overallFilter),
     ]);
 
     const statsData = statsAggregate[0] || {
@@ -87,6 +93,7 @@ export const getStats = async (req, res, next) => {
     res.status(200).json({
       success: true,
       stats: {
+        overallTotal: overallTotal || 0,
         totalStudents: statsData.totalStudents,
         completedStudents: statsData.completedStudents,
         pendingStudents: statsData.pendingStudents,
@@ -124,7 +131,7 @@ export const getDepartmentProgress = async (req, res, next) => {
             $sum: { $cond: [{ $eq: ['$currentStep', 5] }, 1, 0] },
           },
           pending: {
-            $sum: { $cond: [{ $lt: ['$currentStep', 5] }, 1, 0] },
+            $sum: { $cond: [{ $and: [{ $gt: ['$currentStep', 0] }, { $lt: ['$currentStep', 5] }] }, 1, 0] },
           },
         },
       },
