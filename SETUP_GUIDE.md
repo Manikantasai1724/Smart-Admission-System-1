@@ -51,8 +51,8 @@ This creates:
 hallTicketNumber,name,rank,department,studentPhone,parentPhone,email,category,gender
 00001,Ramesh Kumar,1234,CSE,9876543210,9876543211,ramesh@student.edu,OC,Male
 00002,Priya Sharma,2345,CSE,9876543220,9876543221,priya@student.edu,BC-A,Female
-00003,Arun Patel,3456,AIML,9876543230,9876543231,arun@student.edu,OC,Male
-00004,Neha Singh,4567,AIML,9876543240,9876543241,neha@student.edu,SC,Female
+00003,Arun Patel,3456,AIM,9876543230,9876543231,arun@student.edu,OC,Male
+00004,Neha Singh,4567,AIM,9876543240,9876543241,neha@student.edu,SC,Female
 00005,Vikram Reddy,5678,CIC,9876543250,9876543251,vikram@student.edu,OC,Male
 ```
 
@@ -80,11 +80,11 @@ hallTicketNumber,name,rank,department,studentPhone,parentPhone,email,category,ge
 
 Test with other departments:
 
-**AIML Volunteer:**
+**AIM Volunteer:**
 
-- Username: `volunteer_aiml`
+- Username: `volunteer_aim`
 - Password: `vol123`
-- Should see only AIML students
+- Should see only AIM students
 
 **CIC HOD:**
 

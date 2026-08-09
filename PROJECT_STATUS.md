@@ -7,14 +7,14 @@
 - ✅ Deleted original `seed.js` that contained 30 dummy students
 - ✅ Recreated `seed.js` with **ONLY 6 test users** (no dummy students):
   - CSE: 1 HOD + 1 Volunteer
-  - AIML: 1 HOD + 1 Volunteer
+  - AIM: 1 HOD + 1 Volunteer
   - CIC: 1 HOD + 1 Volunteer
 - ✅ Database starts clean (ready for real data via file uploads)
 
 ### 2. Reduced Department Support
 
-- ✅ Updated `server/utils/helpers.js` - Now only supports: **CSE, AIML, CIC**
-- ✅ Updated `client/src/utils/constants.js` - Now only supports: **CSE, AIML, CIC**
+- ✅ Updated `server/utils/helpers.js` - Now only supports: **CSE, AIM, CIC**
+- ✅ Updated `client/src/utils/constants.js` - Now only supports: **CSE, AIM, CIC**
 - ✅ Removed: ECE, EEE, MECH, CIVIL, IT, AIDS
 
 ### 3. Cleaned Project Structure
@@ -140,7 +140,7 @@
   email: String,
   password: String (hashed),
   role: "HOD" | "Volunteer",
-  department: "CSE" | "AIML" | "CIC",
+  department: "CSE" | "AIM" | "CIC",
   createdAt: Date
 }
 ```
@@ -153,7 +153,7 @@
   hallTicketNumber: String (unique),
   name: String,
   rank: Number,
-  department: "CSE" | "AIML" | "CIC",
+  department: "CSE" | "AIM" | "CIC",
   studentPhone: String,
   parentPhone: String,
   email: String,
@@ -194,8 +194,8 @@
 | ---- | -------------- | -------- | --------- |
 | CSE  | admin          | admin123 | HOD       |
 | CSE  | volunteer      | vol123   | Volunteer |
-| AIML | hod_aiml       | hod123   | HOD       |
-| AIML | volunteer_aiml | vol123   | Volunteer |
+| AIM  | hod_aim        | hod123   | HOD       |
+| AIM  | volunteer_aim  | vol123   | Volunteer |
 | CIC  | hod_cic        | hod123   | HOD       |
 | CIC  | volunteer_cic  | vol123   | Volunteer |
 
@@ -214,7 +214,7 @@ hallTicketNumber,name,rank,department,studentPhone,parentPhone,email,category,ge
 - ✅ No dummy student data
 - ✅ No unnecessary files
 - ✅ 6 test users only
-- ✅ 3 departments supported (CSE, AIML, CIC)
+- ✅ 3 departments supported (CSE, AIM, CIC)
 - ✅ File upload working (CSV, XLSX, PDF)
 - ✅ Volunteer access properly secured
 - ✅ Audit logging in place

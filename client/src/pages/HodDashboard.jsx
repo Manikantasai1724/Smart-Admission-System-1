@@ -342,7 +342,7 @@ function HodDashboard() {
           {/* Branch Filter Button Group */}
           <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5">
             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Branch</span>
-            {['ALL', 'CSE', 'AIML', 'CIC'].map((branch) => {
+            {['ALL', 'CSE', 'AIM', 'CIC'].map((branch) => {
               const isActive = (branch === 'ALL' && selectedDepartment === '') || (selectedDepartment === branch);
               return (
                 <button

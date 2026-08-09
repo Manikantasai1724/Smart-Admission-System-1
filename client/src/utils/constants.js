@@ -1,4 +1,4 @@
-export const DEPARTMENTS = ["CSE", "AIML", "CIC"];
+export const DEPARTMENTS = ["CSE", "AIM", "CIC"];
 
 export const STATUS_FILTERS = ["all", "completed", "pending", "in-progress"];
 

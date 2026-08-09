@@ -6,7 +6,7 @@
  * List of all recognised departments.
  * @type {string[]}
  */
-export const DEPARTMENTS = ["CSE", "AIML", "CIC"];
+export const DEPARTMENTS = ["CSE", "AIM", "CIC"];
 
 /**
  * Trim whitespace and escape basic HTML entities to prevent stored XSS.

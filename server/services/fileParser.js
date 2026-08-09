@@ -221,7 +221,7 @@ Extract ALL students found in the text. For each student, extract the following 
 1. hallTicketNumber (string, required, typically 8-15 alphanumeric characters)
 2. name (string, required, student's full name)
 3. rank (number, required, e.g. EAMCET rank)
-4. department (string, required, e.g. CSE, ECE, IT, AIML, CIC, etc.)
+4. department (string, required, e.g. CSE, ECE, IT, AIM, CIC, etc.)
 5. gender (string, optional, e.g. M, F)
 6. caste (string, optional, e.g. OC, BC_B, BC_D, etc.)
 7. region (string, optional, e.g. AU, OU, SVU)

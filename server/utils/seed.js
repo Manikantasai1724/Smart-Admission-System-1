@@ -1,6 +1,6 @@
 /**
  * @fileoverview Database seeder.
- * Creates default users (Admin, HODs, and Volunteers) for CSE, AIML, and CIC departments.
+ * Creates default users (Admin, HODs, and Volunteers) for CSE, AIM, and CIC departments.
  *
  * Run:  node utils/seed.js
  */
@@ -36,20 +36,20 @@ const seedUsers = [
     department: "CSE",
   },
   {
-    name: "AIML HOD",
-    username: "hod_aiml",
-    email: "hod.aiml@college.edu",
+    name: "AIM HOD",
+    username: "hod_aim",
+    email: "hod.aim@college.edu",
     password: "hod123",
     role: "HOD",
-    department: "AIML",
+    department: "AIM",
   },
   {
-    name: "AIML Volunteer",
-    username: "volunteer_aiml",
-    email: "volunteer.aiml@college.edu",
+    name: "AIM Volunteer",
+    username: "volunteer_aim",
+    email: "volunteer.aim@college.edu",
     password: "vol123",
     role: "Volunteer",
-    department: "AIML",
+    department: "AIM",
   },
   {
     name: "CIC HOD",
@@ -108,8 +108,8 @@ const seed = async () => {
     console.log("  Main Admin    → admin           / admin123");
     console.log("  CSE HOD       → hod             / hod123");
     console.log("  CSE Volunteer → volunteer       / vol123");
-    console.log("  AIML HOD      → hod_aiml        / hod123");
-    console.log("  AIML Vol      → volunteer_aiml  / vol123");
+    console.log("  AIM HOD       → hod_aim         / hod123");
+    console.log("  AIM Vol       → volunteer_aim   / vol123");
     console.log("  CIC HOD       → hod_cic         / hod123");
     console.log("  CIC Vol       → volunteer_cic   / vol123");
   } catch (error) {
