@@ -34,6 +34,11 @@ export const getStudents = async (req, res, next) => {
     // ── Base filter: only active students ──────────────────────────
     const filter = { isActive: true };
 
+    // Default department filter for Volunteer and HOD accounts
+    if (req.user && req.user.department && req.user.department !== "ALL" && !req.query.department) {
+      filter.department = req.user.department;
+    }
+
     // Department filter
     if (req.query.department) {
       filter.department = req.query.department;
@@ -88,16 +93,14 @@ export const getStudents = async (req, res, next) => {
 
     // Token number filter
     if (req.query.tokenNumber) {
-      const tokenNum = parseInt(req.query.tokenNumber, 10);
+      const cleanTokenStr = String(req.query.tokenNumber).trim().replace(/^#/, "").replace(/\D/g, "");
+      const tokenNum = parseInt(cleanTokenStr, 10);
       if (!Number.isNaN(tokenNum)) {
         filter.tokenNumber = tokenNum;
         
-        // Scope search to today's date if tokenDate is not explicitly provided
+        // Scope search to tokenDate only if explicitly provided in query params
         if (req.query.tokenDate) {
           filter.tokenDate = req.query.tokenDate;
-        } else {
-          // Use IST timezone current date
-          filter.tokenDate = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Kolkata' }).split(' ')[0];
         }
       }
     }
@@ -449,12 +452,27 @@ export const generateStudentToken = async (req, res, next) => {
       });
     }
 
-    // Atomically find and increment/create daily sequence
-    const counter = await DailyCounter.findOneAndUpdate(
-      { date: todayStr },
+    // Atomically find and increment global sequence (never resets when day changes)
+    let counter = await DailyCounter.findOneAndUpdate(
+      { date: "GLOBAL" },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { new: true }
     );
+
+    // If global counter entry does not exist yet, initialize it using max existing tokenNumber
+    if (!counter) {
+      const maxStudent = await Student.findOne({ tokenNumber: { $ne: null } })
+        .sort({ tokenNumber: -1 })
+        .select("tokenNumber")
+        .lean();
+      const initialSeq = maxStudent && typeof maxStudent.tokenNumber === "number" ? maxStudent.tokenNumber + 1 : 1;
+
+      counter = await DailyCounter.findOneAndUpdate(
+        { date: "GLOBAL" },
+        { $setOnInsert: { seq: initialSeq } },
+        { new: true, upsert: true }
+      );
+    }
 
     const tokenNumber = counter.seq;
 

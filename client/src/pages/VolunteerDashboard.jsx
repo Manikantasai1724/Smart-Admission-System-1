@@ -58,8 +58,13 @@ function VolunteerDashboard() {
       }
 
       const params = { limit: 20 };
+      if (user?.department && user.department !== 'ALL') {
+        params.department = user.department;
+      }
+
       if (searchType === 'token') {
-        params.tokenNumber = search;
+        const cleanedToken = search.trim().replace(/^#/, '').replace(/\D/g, '');
+        params.tokenNumber = cleanedToken || search.trim();
       } else {
         params.search = search;
       }
@@ -75,7 +80,7 @@ function VolunteerDashboard() {
     } finally {
       if (showLoader) setLoading(false);
     }
-  }, [addToast, searchType]);
+  }, [addToast, searchType, user?.department]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -204,7 +209,7 @@ function VolunteerDashboard() {
           <p className="text-gray-700 dark:text-gray-300 font-semibold text-lg">Search for a Student</p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">
             {searchType === 'token'
-              ? 'Enter a daily sequence token number in the search bar above to view and manage status.'
+              ? 'Enter a token number in the search bar above to view and manage status.'
               : 'Enter a student name or hall ticket number in the search bar above to view and manage status.'}
           </p>
         </div>

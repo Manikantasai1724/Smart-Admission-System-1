@@ -40,19 +40,26 @@ export const buildSearchQuery = (query) => {
     return {};
   }
 
-  const trimmed = query.trim();
+  const trimmed = query.trim().replace(/^#/, "");
   const numericValue = Number(trimmed);
+  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const containsRegex = new RegExp(escaped, "i");
 
-  // If the query is a positive integer, search only for the rank field exactly matching the numeric value.
+  // If the query is a positive integer, search for matching rank or tokenNumber alongside regex matches.
   if (trimmed !== "" && !Number.isNaN(numericValue) && /^\d+$/.test(trimmed)) {
-    return { rank: numericValue };
+    return {
+      $or: [
+        { tokenNumber: numericValue },
+        { rank: numericValue },
+        { hallTicketNumber: containsRegex },
+        { phone: containsRegex },
+        { parentPhone: containsRegex }
+      ]
+    };
   }
 
-  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  
   // Use a prefix regex for indexed string fields where applicable
   const prefixRegex = new RegExp("^" + escaped, "i");
-  const containsRegex = new RegExp(escaped, "i");
 
   // Check if it's a number-like string (e.g. for phone or hall ticket)
   const isPhoneSearch = /^[\d\+\-\s]+$/.test(trimmed);
