@@ -116,15 +116,26 @@ export const getStudents = async (req, res, next) => {
       }
     }
 
-    const [students, total] = await Promise.all([
+    const [rawStudents, total] = await Promise.all([
       Student.find(filter)
-        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate("uploadedBy", "name email")
         .lean(),
       Student.countDocuments(filter),
     ]);
+
+    // Default sort: tokenNumber ascending (#1, #2, #3...), non-tokenized students afterwards
+    const students = rawStudents.sort((a, b) => {
+      const aTok = a.tokenNumber;
+      const bTok = b.tokenNumber;
+      if (aTok !== null && aTok !== undefined && bTok !== null && bTok !== undefined) {
+        return aTok - bTok;
+      }
+      if (aTok !== null && aTok !== undefined) return -1;
+      if (bTok !== null && bTok !== undefined) return 1;
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
 
     res.status(200).json({
       success: true,
@@ -371,10 +382,20 @@ export const exportStudents = async (req, res, next) => {
     if (req.query.phase) {
       filter.phase = req.query.phase;
     }
-    const students = await Student.find(filter)
-      .sort({ createdAt: -1 })
+    const rawStudents = await Student.find(filter)
       .populate("uploadedBy", "name email")
       .lean();
+
+    const students = rawStudents.sort((a, b) => {
+      const aTok = a.tokenNumber;
+      const bTok = b.tokenNumber;
+      if (aTok !== null && aTok !== undefined && bTok !== null && bTok !== undefined) {
+        return aTok - bTok;
+      }
+      if (aTok !== null && aTok !== undefined) return -1;
+      if (bTok !== null && bTok !== undefined) return 1;
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
     res.status(200).json({
       success: true,
       students,

@@ -329,7 +329,7 @@ function HodDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-            {getGreeting()}, <span className="gradient-text">HOD</span>
+            {getGreeting()}, <span className="gradient-text">Hod Sir</span>
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
             Here&apos;s your admission overview for today
@@ -360,57 +360,55 @@ function HodDashboard() {
           {/* Branch Filter Button Group */}
           <div className="flex-shrink-0">
             <div className="flex items-center flex-wrap gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5">
-            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Branch</span>
-            {['ALL', 'CSE', 'AIM', 'CIC'].map((branch) => {
-              const isActive = (branch === 'ALL' && selectedDepartment === '') || (selectedDepartment === branch);
-              return (
-                <button
-                  key={branch}
-                  onClick={() => handleDepartmentChange(branch === 'ALL' ? '' : branch)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
-                    isActive
-                      ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 scale-[1.02]'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  {branch}
-                </button>
-              );
-            })}
+              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Branch</span>
+              {['ALL', 'CSE', 'AIM', 'CIC'].map((branch) => {
+                const isActive = (branch === 'ALL' && selectedDepartment === '') || (selectedDepartment === branch);
+                return (
+                  <button
+                    key={branch}
+                    onClick={() => handleDepartmentChange(branch === 'ALL' ? '' : branch)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${isActive
+                        ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 scale-[1.02]'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
+                  >
+                    {branch}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Counseling Day Filter Button Group */}
           <div className="flex-shrink-0">
             <div className="flex items-center flex-wrap gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5">
-            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Counseling</span>
-            {(() => {
-              const dayFilters = [
-                { label: 'ALL DAYS', value: '' }
-              ];
-              for (let i = 1; i <= counselingDays; i++) {
-                dayFilters.push({
-                  label: formatCounselingDate(i),
-                  value: String(i)
+              <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Counseling</span>
+              {(() => {
+                const dayFilters = [
+                  { label: 'ALL DAYS', value: '' }
+                ];
+                for (let i = 1; i <= counselingDays; i++) {
+                  dayFilters.push({
+                    label: formatCounselingDate(i),
+                    value: String(i)
+                  });
+                }
+                return dayFilters.map((item) => {
+                  const isActive = selectedDay === item.value;
+                  return (
+                    <button
+                      key={item.label + item.value}
+                      onClick={() => handleDayChange(item.value)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${isActive
+                          ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 scale-[1.02]'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
+                        }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
                 });
-              }
-              return dayFilters.map((item) => {
-                const isActive = selectedDay === item.value;
-                return (
-                  <button
-                    key={item.label + item.value}
-                    onClick={() => handleDayChange(item.value)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
-                      isActive
-                        ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 scale-[1.02]'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                );
-              });
-            })()}
+              })()}
             </div>
           </div>
         </div>
@@ -472,18 +470,16 @@ function HodDashboard() {
                   <button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
-                    className={`relative pb-3 text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 px-1 ${
-                      isActive
+                    className={`relative pb-3 text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 px-1 ${isActive
                         ? 'text-primary-600 dark:text-primary-400 font-bold'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-                    }`}
+                      }`}
                   >
                     <span>{tab.name}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                      isActive
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${isActive
                         ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
                         : 'bg-gray-100 dark:bg-primary-950 text-gray-500 dark:text-gray-400'
-                    }`}>
+                      }`}>
                       {tab.count}
                     </span>
                     {isActive && (

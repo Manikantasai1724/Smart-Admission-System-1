@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, ArrowUpDown } from 'lucide-react';
 import StatusToggle from './StatusToggle';
@@ -6,6 +6,13 @@ import StatusBadge from '../common/StatusBadge';
 import { calculateCompletionPercentage, getStatusLabel } from '../../utils/helpers';
 import { STEP_LABELS, ADMISSION_STEPS } from '../../utils/constants';
 import { useAuth } from '../../context/AuthContext';
+
+const isStepDone = (student, stepKey, stepIndex) => {
+  if (!student) return false;
+  if (student[stepKey] && student[stepKey].completed === true) return true;
+  const stepNum = typeof student.currentStep === 'number' ? student.currentStep : parseInt(student.currentStep, 10);
+  return !isNaN(stepNum) && stepNum > stepIndex;
+};
 
 function StudentTable({ students = [], onStatusChange, loading = false, sortConfig, onSort, showHallTicket = false, showStatus = false }) {
   const navigate = useNavigate();
@@ -15,6 +22,33 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
   const handleSort = (key) => {
     if (onSort) onSort(key);
   };
+
+  const sortedStudents = useMemo(() => {
+    const list = [...students];
+    if (sortConfig && sortConfig.key) {
+      list.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+      return list;
+    }
+
+    // Default sorting: Sort by tokenNumber ascending (#1, #2, #3...).
+    // Non-tokenized students come after tokenized students, sorted by createdAt descending.
+    return list.sort((a, b) => {
+      const aTok = a.tokenNumber;
+      const bTok = b.tokenNumber;
+      if (aTok !== null && aTok !== undefined && bTok !== null && bTok !== undefined) {
+        return aTok - bTok;
+      }
+      if (aTok !== null && aTok !== undefined) return -1;
+      if (bTok !== null && bTok !== undefined) return 1;
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
+  }, [students, sortConfig]);
 
   const SortHeader = ({ label, sortKey }) => (
     <button
@@ -26,7 +60,7 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
     </button>
   );
 
-  if (!students.length && !loading) {
+  if (!sortedStudents.length && !loading) {
     return (
       <div className="glass-card p-12 text-center">
         <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
@@ -42,9 +76,28 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
 
   return (
     <div className="space-y-4">
+      {/* Mobile Card Summary */}
+      <div className="block md:hidden glass-card p-3 mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Step Completion Summary</span>
+          <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400">{sortedStudents.length} Students Total</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {ADMISSION_STEPS.map((step, stepIndex) => {
+            const completedCount = sortedStudents.filter(s => isStepDone(s, step, stepIndex)).length;
+            return (
+              <div key={step} className="p-2 rounded-lg bg-gray-50 dark:bg-primary-950/30 border border-gray-100 dark:border-primary-400/10 text-center">
+                <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 block truncate">{STEP_LABELS[step]}</span>
+                <span className="text-xs font-extrabold text-primary-600 dark:text-primary-400">{completedCount} / {sortedStudents.length}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Mobile Card Layout (Visible on small screens) */}
       <div className="block md:hidden space-y-4">
-        {students.map((student, index) => {
+        {sortedStudents.map((student, index) => {
           const completion = calculateCompletionPercentage(student);
           return (
             <div
@@ -59,8 +112,13 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                     {student.name?.charAt(0)?.toUpperCase() || '?'}
                   </div>
                   <div>
-                    <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                      {student.name || '—'}
+                    <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                      <span>{student.name || '—'}</span>
+                      {student.tokenNumber && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900/40 text-[10px] font-extrabold text-primary-700 dark:text-primary-300">
+                          #{student.tokenNumber}
+                        </span>
+                      )}
                     </h5>
                     <p className="text-xs font-mono text-gray-500 dark:text-gray-400">
                       {student.hallTicket || student.hallTicketNumber || '—'}
@@ -74,17 +132,18 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
 
               {/* Subtitle Details: Rank, Phase, etc */}
               <div className="flex flex-wrap gap-2 text-[11px] text-gray-500">
+                {student.tokenNumber && <span className="px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/40 text-[10px] font-extrabold text-primary-700 dark:text-primary-300">Token #{student.tokenNumber}</span>}
                 {student.rank && <span>Rank: {student.rank}</span>}
                 {student.gender && <span>• {student.gender}</span>}
                 {student.caste && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] text-gray-600 dark:text-gray-400">{student.caste}</span>}
                 {student.region && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] text-gray-600 dark:text-gray-400">{student.region}</span>}
-                {student.phase && <span className="px-1 py-0.2 rounded bg-primary-50 dark:bg-primary-900/20 text-[10px] text-primary-600 dark:text-primary-400">Phase {student.phase}</span>}
+                {student.phase && <span className="px-1 py-0.2 rounded bg-primary-50 dark:bg-primary-900/20 text-[10px] font-semibold text-primary-600 dark:text-primary-400">Phase {student.phase}</span>}
               </div>
 
               {/* Status Checklist */}
               <div className="grid grid-cols-2 gap-2 py-2 border-t border-b border-gray-100 dark:border-primary-400/5">
                 {ADMISSION_STEPS.map((step, stepIndex) => {
-                  const isChecked = student.currentStep > stepIndex;
+                  const isChecked = isStepDone(student, step, stepIndex);
                   return (
                     <div key={step} className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-50/50 dark:bg-primary-950/20" onClick={(e) => e.stopPropagation()}>
                       <span className="text-[10px] text-gray-400 mb-1">{STEP_LABELS[step]}</span>
@@ -164,24 +223,35 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                 <th className="text-left px-2 py-3.5">
                   <SortHeader label="Department" sortKey="department" />
                 </th>
-                {ADMISSION_STEPS.map((step) => (
-                  <th key={step} className="text-center px-1.5 py-3.5">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 leading-tight block">
-                      {STEP_LABELS[step]}
-                    </span>
-                  </th>
-                ))}
+                {ADMISSION_STEPS.map((step, stepIndex) => {
+                  const completedCount = sortedStudents.filter(s => isStepDone(s, step, stepIndex)).length;
+                  const totalCount = sortedStudents.length;
+                  return (
+                    <th key={step} className="text-center px-1.5 py-3.5">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 leading-tight block">
+                        {STEP_LABELS[step]} ({completedCount})
+                      </span>
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300 border border-primary-300/50 dark:border-primary-700/50 shadow-sm">
+                        {completedCount} / {totalCount} Done
+                      </span>
+                    </th>
+                  );
+                })}
                 {showStatus && (
                   <th className="text-center px-2 py-3.5">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 block">
+                      Status ({sortedStudents.filter(s => s.currentStep === 5).length})
+                    </span>
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-300/50 dark:border-emerald-700/50 shadow-sm">
+                      {sortedStudents.filter(s => s.currentStep === 5).length} / {sortedStudents.length} Done
+                    </span>
                   </th>
                 )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-primary-400/5">
-              {students.map((student, index) => {
+              {sortedStudents.map((student, index) => {
                 const completion = calculateCompletionPercentage(student);
-                const statusLabel = getStatusLabel(completion);
 
                 return (
                   <tr
@@ -205,8 +275,13 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                           {student.name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-                            {student.name || '—'}
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate flex items-center gap-2">
+                            <span>{student.name || '—'}</span>
+                            {student.tokenNumber && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900/40 text-[10px] font-extrabold text-primary-700 dark:text-primary-300">
+                                #{student.tokenNumber}
+                              </span>
+                            )}
                           </p>
                           <div className="flex flex-wrap items-center gap-1 mt-0.5 text-xs text-gray-400">
                             {student.rank && <span>Rank: {student.rank}</span>}
@@ -224,7 +299,7 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                       </span>
                     </td>
                     {ADMISSION_STEPS.map((step, stepIndex) => {
-                      const isChecked = student.currentStep > stepIndex;
+                      const isChecked = isStepDone(student, step, stepIndex);
                       return (
                         <td key={step} className="px-1 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                           {canEdit ? (
