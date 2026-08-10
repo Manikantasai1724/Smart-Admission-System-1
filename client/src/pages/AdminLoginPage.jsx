@@ -117,7 +117,6 @@ function AdminLoginPage() {
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="admin"
                   {...register("username", {
                     required: "Username is required",
                   })}
@@ -139,7 +138,6 @@ function AdminLoginPage() {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="admin@123"
                   {...register("password", {
                     required: "Password is required",
                   })}
