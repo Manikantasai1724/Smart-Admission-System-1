@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, CheckCircle, Clock, Download, FileSpreadsheet, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, CheckCircle, Clock, Download, FileSpreadsheet, FileText } from 'lucide-react';
 import DashboardLayout from '../components/common/DashboardLayout';
 import StatCard from '../components/dashboard/StatCard';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
@@ -26,21 +26,25 @@ function HodDashboard() {
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedDay, setSelectedDay] = useState('');
   const [counselingDays, setCounselingDays] = useState(3);
+  const [counselingStartDate, setCounselingStartDate] = useState(null);
 
   // Student list states
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'completed', 'all'
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     let isMounted = true;
     const fetchSettings = async () => {
       try {
         const res = await settingsService.getSettings();
-        if (isMounted && res.data?.settings?.counselingDurationDays) {
-          setCounselingDays(Number(res.data.settings.counselingDurationDays));
+        if (isMounted) {
+          if (res.data?.settings?.counselingDurationDays) {
+            setCounselingDays(Number(res.data.settings.counselingDurationDays));
+          }
+          if (res.data?.settings?.counselingStartDate) {
+            setCounselingStartDate(res.data.settings.counselingStartDate);
+          }
         }
       } catch (err) {
         console.error('Failed to load settings', err);
@@ -49,6 +53,28 @@ function HodDashboard() {
     fetchSettings();
     return () => { isMounted = false; };
   }, []);
+
+  const formatCounselingDate = useCallback((dayIndex) => {
+    let baseDate;
+    if (counselingStartDate) {
+      const dateStr = String(counselingStartDate).split('T')[0];
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        baseDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      } else {
+        baseDate = new Date(counselingStartDate);
+      }
+    } else {
+      baseDate = new Date();
+    }
+
+    const targetDate = new Date(baseDate);
+    targetDate.setDate(baseDate.getDate() + (dayIndex - 1));
+
+    const monthStr = targetDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+    const dayStr = String(targetDate.getDate()).padStart(2, '0');
+    return `${monthStr}-${dayStr}`;
+  }, [counselingStartDate]);
 
   const fetchDashboardData = useCallback(async (signal) => {
     try {
@@ -80,12 +106,12 @@ function HodDashboard() {
     }
   }, [addToast, selectedDepartment, selectedDay]);
 
-  const fetchStudentsList = useCallback(async (pageToFetch = currentPage, signal) => {
+  const fetchStudentsList = useCallback(async (signal) => {
     try {
       setStudentsLoading(true);
       const params = {
-        page: pageToFetch,
-        limit: 10,
+        page: 1,
+        limit: 5000,
         status: activeTab === 'all' ? undefined : activeTab,
       };
       if (selectedDepartment) params.department = selectedDepartment;
@@ -93,7 +119,6 @@ function HodDashboard() {
 
       const res = await studentService.getStudents(params, { signal });
       setStudents(res.data.students || []);
-      setTotalPages(res.data.pagination?.pages || 1);
     } catch (error) {
       if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
         console.error('Error fetching students list:', error);
@@ -101,7 +126,7 @@ function HodDashboard() {
     } finally {
       setStudentsLoading(false);
     }
-  }, [selectedDepartment, selectedDay, activeTab, currentPage]);
+  }, [selectedDepartment, selectedDay, activeTab]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -111,27 +136,20 @@ function HodDashboard() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchStudentsList(currentPage, controller.signal);
+    fetchStudentsList(controller.signal);
     return () => controller.abort();
-  }, [fetchStudentsList, currentPage]);
+  }, [fetchStudentsList]);
 
   const handleDepartmentChange = (dept) => {
     setSelectedDepartment(dept);
-    setCurrentPage(1);
   };
 
   const handleDayChange = (day) => {
     setSelectedDay(day);
-    setCurrentPage(1);
   };
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
   };
 
   // Socket.IO listeners for real-time updates with 500ms debounce
@@ -143,7 +161,7 @@ function HodDashboard() {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         fetchDashboardData();
-        fetchStudentsList(currentPage);
+        fetchStudentsList();
       }, 500);
     };
 
@@ -159,7 +177,7 @@ function HodDashboard() {
       socket.off('student:updated', handleStudentUpdated);
       socket.off('activity:new', handleNewActivity);
     };
-  }, [socket, fetchDashboardData, fetchStudentsList, currentPage]);
+  }, [socket, fetchDashboardData, fetchStudentsList]);
 
   const overallTotal = stats?.overallTotal ?? 0;
   const totalStudents = stats?.total ?? stats?.totalStudents ?? 0;
@@ -338,10 +356,10 @@ function HodDashboard() {
           </svg>
           Dashboard Filters
         </div>
-        <div className="flex flex-col gap-3 w-full lg:w-auto overflow-hidden">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full lg:w-auto">
           {/* Branch Filter Button Group */}
-          <div className="w-full overflow-x-auto pb-1 hide-scrollbar">
-            <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5 w-max">
+          <div className="flex-shrink-0">
+            <div className="flex items-center flex-wrap gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5">
             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Branch</span>
             {['ALL', 'CSE', 'AIM', 'CIC'].map((branch) => {
               const isActive = (branch === 'ALL' && selectedDepartment === '') || (selectedDepartment === branch);
@@ -363,28 +381,32 @@ function HodDashboard() {
           </div>
 
           {/* Counseling Day Filter Button Group */}
-          <div className="w-full overflow-x-auto pb-1 hide-scrollbar">
-            <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5 w-max">
+          <div className="flex-shrink-0">
+            <div className="flex items-center flex-wrap gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5">
             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Counseling</span>
             {(() => {
-              const dayFilters = ['ALL DAYS'];
+              const dayFilters = [
+                { label: 'ALL DAYS', value: '' }
+              ];
               for (let i = 1; i <= counselingDays; i++) {
-                dayFilters.push(`DAY ${i}`);
+                dayFilters.push({
+                  label: formatCounselingDate(i),
+                  value: String(i)
+                });
               }
-              return dayFilters.map((day) => {
-                const val = day === 'ALL DAYS' ? '' : day.replace('DAY ', '');
-                const isActive = selectedDay === val;
+              return dayFilters.map((item) => {
+                const isActive = selectedDay === item.value;
                 return (
                   <button
-                    key={day}
-                    onClick={() => handleDayChange(val)}
+                    key={item.label + item.value}
+                    onClick={() => handleDayChange(item.value)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
                       isActive
                         ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 scale-[1.02]'
                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
                     }`}
                   >
-                    {day}
+                    {item.label}
                   </button>
                 );
               });
@@ -415,7 +437,7 @@ function HodDashboard() {
               delay={0}
             />
             <StatCard
-              title={selectedDay ? `Visited (Day ${selectedDay})` : "Visited (All Days)"}
+              title={selectedDay ? `Visited (${formatCounselingDate(Number(selectedDay))})` : "Visited (All Days)"}
               value={visited}
               icon={Users}
               color="info"
@@ -478,60 +500,6 @@ function HodDashboard() {
             students={students}
             loading={studentsLoading}
           />
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                Page {currentPage} of {totalPages}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage <= 1}
-                  className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Previous
-                </button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let page;
-                    if (totalPages <= 5) {
-                      page = i + 1;
-                    } else if (currentPage <= 3) {
-                      page = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      page = totalPages - 4 + i;
-                    } else {
-                      page = currentPage - 2 + i;
-                    }
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-all duration-200 ${
-                          currentPage === page
-                            ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= totalPages}
-                  className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </DashboardLayout>

@@ -7,7 +7,7 @@ import { calculateCompletionPercentage, getStatusLabel } from '../../utils/helpe
 import { STEP_LABELS, ADMISSION_STEPS } from '../../utils/constants';
 import { useAuth } from '../../context/AuthContext';
 
-function StudentTable({ students = [], onStatusChange, loading = false, sortConfig, onSort }) {
+function StudentTable({ students = [], onStatusChange, loading = false, sortConfig, onSort, showHallTicket = false, showStatus = false }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canEdit = user?.role?.toLowerCase() === 'volunteer';
@@ -136,32 +136,46 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
 
       {/* Desktop Table Layout (Visible on larger screens) */}
       <div className="hidden md:block glass-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="w-full overflow-x-hidden">
+          <table className="w-full table-fixed border-collapse">
+            <colgroup>
+              <col className="w-[5%]" />
+              {showHallTicket && <col className="w-[12%]" />}
+              <col className={showHallTicket ? "w-[24%]" : "w-[27%]"} />
+              <col className="w-[8%]" />
+              {ADMISSION_STEPS.map((step) => (
+                <col key={step} className="w-[12%]" />
+              ))}
+              {showStatus && <col className="w-[10%]" />}
+            </colgroup>
             <thead>
-              <tr className="border-b border-gray-200/50 dark:border-primary-400/10 whitespace-nowrap">
-                <th className="text-left px-4 py-3.5">
+              <tr className="border-b border-gray-200/50 dark:border-primary-400/10">
+                <th className="text-left px-2 py-3.5">
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">S.No</span>
                 </th>
-                <th className="text-left px-4 py-3.5">
-                  <SortHeader label="Hall Ticket" sortKey="hallTicket" />
-                </th>
-                <th className="text-left px-4 py-3.5">
+                {showHallTicket && (
+                  <th className="text-left px-2 py-3.5">
+                    <SortHeader label="Hall Ticket" sortKey="hallTicket" />
+                  </th>
+                )}
+                <th className="text-left px-3 py-3.5">
                   <SortHeader label="Name" sortKey="name" />
                 </th>
-                <th className="text-left px-4 py-3.5">
+                <th className="text-left px-2 py-3.5">
                   <SortHeader label="Department" sortKey="department" />
                 </th>
                 {ADMISSION_STEPS.map((step) => (
-                  <th key={step} className="text-center px-4 py-3.5">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  <th key={step} className="text-center px-1.5 py-3.5">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 leading-tight block">
                       {STEP_LABELS[step]}
                     </span>
                   </th>
                 ))}
-                <th className="text-center px-4 py-3.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</span>
-                </th>
+                {showStatus && (
+                  <th className="text-center px-2 py-3.5">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</span>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-primary-400/5">
@@ -175,21 +189,23 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                     onClick={() => navigate(`/students/${student._id || student.id}`)}
                     className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors group cursor-pointer"
                   >
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-3">
                       <span className="text-sm text-gray-500 dark:text-gray-400">{index + 1}</span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">
-                        {student.hallTicket || student.hallTicketNumber || '—'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
+                    {showHallTicket && (
+                      <td className="px-2 py-3 truncate">
+                        <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">
+                          {student.hallTicket || student.hallTicketNumber || '—'}
+                        </span>
+                      </td>
+                    )}
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                           {student.name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
                             {student.name || '—'}
                           </p>
                           <div className="flex flex-wrap items-center gap-1 mt-0.5 text-xs text-gray-400">
@@ -202,15 +218,15 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex px-2.5 py-1 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-xs font-semibold text-primary-700 dark:text-primary-400">
+                    <td className="px-2 py-3">
+                      <span className="inline-flex px-2 py-1 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-xs font-semibold text-primary-700 dark:text-primary-400">
                         {student.department || '—'}
                       </span>
                     </td>
                     {ADMISSION_STEPS.map((step, stepIndex) => {
                       const isChecked = student.currentStep > stepIndex;
                       return (
-                        <td key={step} className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <td key={step} className="px-1 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                           {canEdit ? (
                             <StatusToggle
                               checked={isChecked}
@@ -223,28 +239,30 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                         </td>
                       );
                     })}
-                    <td className="px-4 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                      {canEdit ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const isComplete = completion >= 100;
-                            onStatusChange?.(student._id || student.id, {
-                              currentStep: isComplete ? 0 : 5
-                            });
-                          }}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                            completion >= 100
-                              ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40'
-                              : 'bg-primary-50 text-primary-600 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/40'
-                          }`}
-                        >
-                          {completion >= 100 ? 'Mark as Unread' : 'Mark as Read'}
-                        </button>
-                      ) : (
-                        <StatusBadge status={completion >= 100 ? 'completed' : 'pending'} />
-                      )}
-                    </td>
+                    {showStatus && (
+                      <td className="px-2 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        {canEdit ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const isComplete = completion >= 100;
+                              onStatusChange?.(student._id || student.id, {
+                                currentStep: isComplete ? 0 : 5
+                              });
+                            }}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                              completion >= 100
+                                ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40'
+                                : 'bg-primary-50 text-primary-600 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/40'
+                            }`}
+                          >
+                            {completion >= 100 ? 'Unread' : 'Read'}
+                          </button>
+                        ) : (
+                          <StatusBadge status={completion >= 100 ? 'completed' : 'pending'} />
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })}
