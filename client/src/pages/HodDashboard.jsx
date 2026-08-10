@@ -338,8 +338,9 @@ function HodDashboard() {
           </svg>
           Dashboard Filters
         </div>
-        <div className="flex flex-col sm:flex-row flex-wrap items-center gap-4">
-          {/* Branch Filter Button Group */}
+        <div className="flex w-full lg:w-auto overflow-x-auto pb-2 -mb-2 hide-scrollbar">
+          <div className="flex flex-row items-center gap-4 min-w-max">
+            {/* Branch Filter Button Group */}
           <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-primary-950/20 p-1 rounded-xl border border-gray-200/40 dark:border-primary-400/5">
             <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Branch</span>
             {['ALL', 'CSE', 'AIM', 'CIC'].map((branch) => {
@@ -386,6 +387,7 @@ function HodDashboard() {
                 );
               });
             })()}
+          </div>
           </div>
         </div>
       </div>
