@@ -5,13 +5,21 @@ import Settings from "../models/Settings.js";
 // Helper to calculate student phase
 const calculateStudentPhase = (createdAt, startDateString) => {
   if (!startDateString) return "1";
-  const start = new Date(startDateString);
-  start.setHours(0, 0, 0, 0);
   
-  const created = new Date(createdAt);
-  created.setHours(0, 0, 0, 0);
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
   
-  const diffTime = created.getTime() - start.getTime();
+  const createdStr = formatter.format(new Date(createdAt));
+  const startStr = formatter.format(new Date(startDateString));
+  
+  const createdDate = new Date(`${createdStr}T00:00:00Z`);
+  const startDate = new Date(`${startStr}T00:00:00Z`);
+  
+  const diffTime = createdDate.getTime() - startDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   return String(Math.max(1, diffDays + 1));
 };
