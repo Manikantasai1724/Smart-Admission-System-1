@@ -135,9 +135,7 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                 {student.tokenNumber && <span className="px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/40 text-[10px] font-extrabold text-primary-700 dark:text-primary-300">Token #{student.tokenNumber}</span>}
                 {student.rank && <span>Rank: {student.rank}</span>}
                 {student.gender && <span>• {student.gender}</span>}
-                {student.caste && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] text-gray-600 dark:text-gray-400">{student.caste}</span>}
                 {student.region && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] text-gray-600 dark:text-gray-400">{student.region}</span>}
-                {student.phase && <span className="px-1 py-0.2 rounded bg-primary-50 dark:bg-primary-900/20 text-[10px] font-semibold text-primary-600 dark:text-primary-400">Phase {student.phase}</span>}
               </div>
 
               {/* Status Checklist */}
@@ -286,9 +284,7 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                           <div className="flex flex-wrap items-center gap-1 mt-0.5 text-xs text-gray-400">
                             {student.rank && <span>Rank: {student.rank}</span>}
                             {student.gender && <span>• {student.gender}</span>}
-                            {student.caste && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] font-semibold text-gray-600 dark:text-gray-400">{student.caste}</span>}
                             {student.region && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] font-semibold text-gray-600 dark:text-gray-400">{student.region}</span>}
-                            {student.phase && <span className="px-1 py-0.2 rounded bg-primary-50 dark:bg-primary-900/20 text-[10px] font-semibold text-primary-600 dark:text-primary-400">Phase {student.phase}</span>}
                           </div>
                         </div>
                       </div>
