@@ -37,8 +37,8 @@ function VolunteerDashboard() {
       const statsRes = await getStats({}, { signal });
       const globalStats = statsRes.data.stats || statsRes.data;
       setStats({ 
-        pendingToday: globalStats.pendingStudents, 
-        completedToday: globalStats.completedStudents 
+        pendingToday: globalStats.pendingToday !== undefined ? globalStats.pendingToday : globalStats.pendingStudents, 
+        completedToday: globalStats.completedToday !== undefined ? globalStats.completedToday : globalStats.completedStudents 
       });
     } catch (error) {
       if (error?.name !== 'CanceledError' && error?.name !== 'AbortError') {

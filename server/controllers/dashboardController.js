@@ -26,8 +26,15 @@ export const getStats = async (req, res, next) => {
       baseFilter.phase = req.query.phase;
     }
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const todayStr = formatter.format(now);
+    const startOfDay = new Date(`${todayStr}T00:00:00+05:30`);
 
     // ── Single Pass Aggregation + Parallel Audit Log Query ─────────────
     const overallFilter = { isActive: true };
@@ -47,6 +54,35 @@ export const getStats = async (req, res, next) => {
             },
             pendingStudents: {
               $sum: { $cond: [{ $and: [{ $gt: ['$currentStep', 0] }, { $lt: ['$currentStep', 5] }] }, 1, 0] },
+            },
+            pendingToday: {
+              $sum: { 
+                $cond: [
+                  { 
+                    $and: [
+                      { $gt: ['$currentStep', 0] }, 
+                      { $lt: ['$currentStep', 5] },
+                      { $gte: ['$tokenGeneratedAt', startOfDay] }
+                    ] 
+                  }, 
+                  1, 
+                  0
+                ] 
+              },
+            },
+            completedToday: {
+              $sum: { 
+                $cond: [
+                  { 
+                    $and: [
+                      { $eq: ['$currentStep', 5] },
+                      { $gte: ['$completedAt', startOfDay] }
+                    ]
+                  }, 
+                  1, 
+                  0
+                ] 
+              },
             },
             selfReportedCount: {
               $sum: { $cond: [{ $gte: ['$currentStep', 1] }, 1, 0] },
@@ -97,6 +133,8 @@ export const getStats = async (req, res, next) => {
         totalStudents: statsData.totalStudents,
         completedStudents: statsData.completedStudents,
         pendingStudents: statsData.pendingStudents,
+        pendingToday: statsData.pendingToday || 0,
+        completedToday: statsData.completedToday || 0,
         inProgressStudents,
         selfReportedCount: statsData.selfReportedCount,
         documentsSubmittedCount: statsData.documentsSubmittedCount,

@@ -6,7 +6,22 @@ import fs from "fs";
 import Student from "../models/Student.js";
 import AuditLog from "../models/AuditLog.js";
 import DailyCounter from "../models/DailyCounter.js";
+import Settings from "../models/Settings.js";
 import { parseFile } from "../services/fileParser.js";
+
+// Helper to calculate student phase
+const calculateStudentPhase = (createdAt, startDateString) => {
+  if (!startDateString) return "1";
+  const start = new Date(startDateString);
+  start.setHours(0, 0, 0, 0);
+  
+  const created = new Date(createdAt);
+  created.setHours(0, 0, 0, 0);
+  
+  const diffTime = created.getTime() - start.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return String(Math.max(1, diffDays + 1));
+};
 import { bulkInsertStudents } from "../services/studentService.js";
 import {
   emitStudentUpdate,
@@ -503,6 +518,12 @@ export const generateStudentToken = async (req, res, next) => {
     student.tokenNumber = tokenNumber;
     student.tokenGeneratedAt = new Date();
     student.tokenDate = todayStr;
+    
+    // Update student's phase to the current counseling day based on visit date
+    const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
+    if (counselingSetting?.value) {
+      student.phase = calculateStudentPhase(new Date(), counselingSetting.value);
+    }
     
     if (student.currentStep === 0) {
       student.currentStep = 1;
