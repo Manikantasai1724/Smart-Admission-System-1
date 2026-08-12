@@ -81,6 +81,9 @@ export const getStudents = async (req, res, next) => {
         case "pending":
           filter.currentStep = { $gt: 0, $lt: 5 };
           break;
+        case "visited":
+          filter.currentStep = { $gt: 0 };
+          break;
         default:
           break;
       }

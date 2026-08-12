@@ -42,7 +42,12 @@ export const getStats = async (req, res, next) => {
       overallFilter.department = req.query.department;
     }
 
-    const [statsAggregate, recentActivity, overallTotal] = await Promise.all([
+    const overallCompletedFilter = { isActive: true, currentStep: 5 };
+    if (req.query.department) {
+      overallCompletedFilter.department = req.query.department;
+    }
+
+    const [statsAggregate, recentActivity, overallTotal, overallCompleted] = await Promise.all([
       Student.aggregate([
         { $match: baseFilter },
         {
@@ -112,6 +117,7 @@ export const getStats = async (req, res, next) => {
         .populate('updatedBy', 'name email')
         .lean(),
       Student.countDocuments(overallFilter),
+      Student.countDocuments(overallCompletedFilter),
     ]);
 
     const statsData = statsAggregate[0] || {
@@ -130,6 +136,7 @@ export const getStats = async (req, res, next) => {
       success: true,
       stats: {
         overallTotal: overallTotal || 0,
+        overallCompleted: overallCompleted || 0,
         totalStudents: statsData.totalStudents,
         completedStudents: statsData.completedStudents,
         pendingStudents: statsData.pendingStudents,

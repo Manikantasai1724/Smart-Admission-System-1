@@ -53,7 +53,7 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
   const SortHeader = ({ label, sortKey }) => (
     <button
       onClick={() => handleSort(sortKey)}
-      className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+      className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
     >
       {label}
       <ArrowUpDown className="w-3.5 h-3.5 opacity-50" />
@@ -107,15 +107,15 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
             >
               {/* Header: Name, Initials, Dept */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                     {student.name?.charAt(0)?.toUpperCase() || '?'}
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                      <span>{student.name || '—'}</span>
+                      <span className="truncate min-w-0">{student.name || '—'}</span>
                       {student.tokenNumber && (
-                        <span className="px-1.5 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900/40 text-[10px] font-extrabold text-primary-700 dark:text-primary-300">
+                        <span className="flex-shrink-0 px-1.5 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900/40 text-[10px] font-extrabold text-primary-700 dark:text-primary-300">
                           #{student.tokenNumber}
                         </span>
                       )}
@@ -193,54 +193,54 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
 
       {/* Desktop Table Layout (Visible on larger screens) */}
       <div className="hidden md:block glass-card overflow-hidden">
-        <div className="w-full overflow-x-hidden">
-          <table className="w-full table-fixed border-collapse">
+        <div className="w-full overflow-x-auto custom-scrollbar">
+          <table className="w-full min-w-[1200px] table-fixed border-collapse">
             <colgroup>
               <col className="w-[5%]" />
               {showHallTicket && <col className="w-[12%]" />}
-              <col className={showHallTicket ? "w-[24%]" : "w-[27%]"} />
-              <col className="w-[8%]" />
+              <col className={showHallTicket ? "w-[25%]" : "w-[30%]"} />
+              <col className="w-[10%]" />
               {ADMISSION_STEPS.map((step) => (
-                <col key={step} className="w-[12%]" />
+                <col key={step} className="w-[11%]" />
               ))}
               {showStatus && <col className="w-[10%]" />}
             </colgroup>
             <thead>
-              <tr className="border-b border-gray-200/50 dark:border-primary-400/10">
-                <th className="text-left px-2 py-3.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">S.No</span>
+              <tr className="bg-gray-50/50 dark:bg-primary-950/20 border-b border-gray-200/50 dark:border-primary-400/10">
+                <th className="text-left px-4 py-4">
+                  <span className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">S.No</span>
                 </th>
                 {showHallTicket && (
-                  <th className="text-left px-2 py-3.5">
+                  <th className="text-left px-4 py-4">
                     <SortHeader label="Hall Ticket" sortKey="hallTicket" />
                   </th>
                 )}
-                <th className="text-left px-3 py-3.5">
+                <th className="text-left px-4 py-4">
                   <SortHeader label="Name" sortKey="name" />
                 </th>
-                <th className="text-left px-2 py-3.5">
+                <th className="text-left px-4 py-4">
                   <SortHeader label="Department" sortKey="department" />
                 </th>
                 {ADMISSION_STEPS.map((step, stepIndex) => {
                   const completedCount = sortedStudents.filter(s => isStepDone(s, step, stepIndex)).length;
                   const totalCount = sortedStudents.length;
                   return (
-                    <th key={step} className="text-center px-1.5 py-3.5">
-                      <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 leading-tight block">
+                    <th key={step} className="text-center px-2 py-4">
+                      <span className="text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 leading-tight block">
                         {STEP_LABELS[step]} ({completedCount})
                       </span>
-                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300 border border-primary-300/50 dark:border-primary-700/50 shadow-sm">
+                      <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300 border border-primary-300/50 dark:border-primary-700/50 shadow-sm">
                         {completedCount} / {totalCount} Done
                       </span>
                     </th>
                   );
                 })}
                 {showStatus && (
-                  <th className="text-center px-2 py-3.5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 block">
+                  <th className="text-center px-4 py-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 block">
                       Status ({sortedStudents.filter(s => s.currentStep === 5).length})
                     </span>
-                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-300/50 dark:border-emerald-700/50 shadow-sm">
+                    <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-300/50 dark:border-emerald-700/50 shadow-sm">
                       {sortedStudents.filter(s => s.currentStep === 5).length} / {sortedStudents.length} Done
                     </span>
                   </th>
@@ -257,30 +257,32 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                     onClick={() => navigate(`/students/${student._id || student.id}`)}
                     className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors group cursor-pointer"
                   >
-                    <td className="px-2 py-3">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{index + 1}</span>
+                    <td className="px-4 py-4">
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{index + 1}</span>
                     </td>
                     {showHallTicket && (
-                      <td className="px-2 py-3 truncate">
+                      <td className="px-4 py-4 truncate">
                         <span className="text-sm font-mono font-medium text-gray-700 dark:text-gray-300">
                           {student.hallTicket || student.hallTicketNumber || '—'}
                         </span>
                       </td>
                     )}
-                    <td className="px-3 py-3">
+                    <td className="px-4 py-4">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                           {student.name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate flex items-center gap-2">
-                            <span>{student.name || '—'}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate min-w-0">
+                              {student.name || '—'}
+                            </span>
                             {student.tokenNumber && (
-                              <span className="px-1.5 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900/40 text-[10px] font-extrabold text-primary-700 dark:text-primary-300">
+                              <span className="flex-shrink-0 px-1.5 py-0.5 rounded-md bg-primary-100 dark:bg-primary-900/40 text-[10px] font-extrabold text-primary-700 dark:text-primary-300">
                                 #{student.tokenNumber}
                               </span>
                             )}
-                          </p>
+                          </div>
                           <div className="flex flex-wrap items-center gap-1 mt-0.5 text-xs text-gray-400">
                             {student.rank && <span>Rank: {student.rank}</span>}
                             {student.gender && <span>• {student.gender}</span>}
@@ -289,8 +291,8 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                         </div>
                       </div>
                     </td>
-                    <td className="px-2 py-3">
-                      <span className="inline-flex px-2 py-1 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-xs font-semibold text-primary-700 dark:text-primary-400">
+                    <td className="px-4 py-4">
+                      <span className="inline-flex px-2.5 py-1 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-xs font-bold tracking-wide text-primary-700 dark:text-primary-400">
                         {student.department || '—'}
                       </span>
                     </td>

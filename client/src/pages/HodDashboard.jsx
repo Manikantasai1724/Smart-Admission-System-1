@@ -31,7 +31,7 @@ function HodDashboard() {
   // Student list states
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'completed', 'all'
+  const [activeTab, setActiveTab] = useState('visited'); // 'pending', 'completed', 'visited'
 
   useEffect(() => {
     let isMounted = true;
@@ -112,7 +112,7 @@ function HodDashboard() {
       const params = {
         page: 1,
         limit: 5000,
-        status: activeTab === 'all' ? undefined : activeTab,
+        status: activeTab,
       };
       if (selectedDepartment) params.department = selectedDepartment;
       if (selectedDay) params.phase = selectedDay;
@@ -180,6 +180,8 @@ function HodDashboard() {
   }, [socket, fetchDashboardData, fetchStudentsList]);
 
   const overallTotal = stats?.overallTotal ?? 0;
+  const overallCompleted = stats?.overallCompleted ?? 0;
+  const leftStudents = Math.max(0, overallTotal - overallCompleted);
   const totalStudents = stats?.total ?? stats?.totalStudents ?? 0;
   const completed = stats?.completed ?? stats?.completedStudents ?? 0;
   const pending = stats?.pending ?? stats?.pendingStudents ?? 0;
@@ -430,6 +432,7 @@ function HodDashboard() {
             <StatCard
               title="Total Students (All)"
               value={overallTotal}
+              subtitle={`${leftStudents} left to report`}
               icon={Users}
               color="primary"
               delay={0}
@@ -461,7 +464,7 @@ function HodDashboard() {
           <div className="flex items-center justify-between border-b border-gray-200/50 dark:border-primary-400/10 pb-1">
             <div className="flex gap-6">
               {[
-                { id: 'all', name: 'All Students', count: totalStudents },
+                { id: 'visited', name: 'Visited', count: visited },
                 { id: 'pending', name: 'Pending', count: pending },
                 { id: 'completed', name: 'Completed', count: completed }
               ].map((tab) => {

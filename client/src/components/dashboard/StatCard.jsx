@@ -5,7 +5,7 @@ function AnimatedCounter({ end }) {
   return <span>{end.toLocaleString()}</span>;
 }
 
-function StatCard({ title, value, icon: Icon, trend, trendValue, color = 'primary', delay = 0 }) {
+function StatCard({ title, value, icon: Icon, trend, trendValue, subtitle, color = 'primary', delay = 0 }) {
   const colorMap = {
     primary: {
       iconBg: 'bg-primary-100 dark:bg-primary-900/40',
@@ -49,9 +49,14 @@ function StatCard({ title, value, icon: Icon, trend, trendValue, color = 'primar
       <div className="flex items-start justify-between">
         <div className="space-y-3">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-            <AnimatedCounter end={typeof value === 'number' ? value : parseInt(value) || 0} />
-          </p>
+          <div>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+              <AnimatedCounter end={typeof value === 'number' ? value : parseInt(value) || 0} />
+            </p>
+            {subtitle && (
+              <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
+            )}
+          </div>
           {trend !== undefined && (
             <div className="flex items-center gap-1.5">
               {trend === 'up' ? (
