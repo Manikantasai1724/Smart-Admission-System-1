@@ -135,8 +135,8 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                 {student.tokenNumber && <span className="px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/40 text-[10px] font-extrabold text-primary-700 dark:text-primary-300">Token #{student.tokenNumber}</span>}
                 {student.rank && <span>Rank: {student.rank}</span>}
                 {student.gender && <span>• {student.gender}</span>}
+                {student.createdAt && <span>• {new Date(student.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
                 {student.region && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] text-gray-600 dark:text-gray-400">{student.region}</span>}
-                {student.createdAt && <span className="text-gray-400 dark:text-gray-500">• {new Date(student.createdAt).toLocaleString()}</span>}
               </div>
 
               {/* Status Checklist */}
@@ -199,11 +199,10 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
             <colgroup>
               <col className="w-[5%]" />
               {showHallTicket && <col className="w-[12%]" />}
-              <col className={showHallTicket ? "w-[20%]" : "w-[25%]"} />
-              <col className="w-[12%]" />
+              <col className={showHallTicket ? "w-[25%]" : "w-[30%]"} />
               <col className="w-[10%]" />
               {ADMISSION_STEPS.map((step) => (
-                <col key={step} className="w-[9%]" />
+                <col key={step} className="w-[11%]" />
               ))}
               {showStatus && <col className="w-[10%]" />}
             </colgroup>
@@ -219,9 +218,6 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                 )}
                 <th className="text-left px-4 py-4">
                   <SortHeader label="Name" sortKey="name" />
-                </th>
-                <th className="text-left px-4 py-4">
-                  <SortHeader label="Entry Date" sortKey="createdAt" />
                 </th>
                 <th className="text-left px-4 py-4">
                   <SortHeader label="Department" sortKey="department" />
@@ -291,19 +287,10 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                           <div className="flex flex-wrap items-center gap-1 mt-0.5 text-xs text-gray-400">
                             {student.rank && <span>Rank: {student.rank}</span>}
                             {student.gender && <span>• {student.gender}</span>}
+                            {student.createdAt && <span>• {new Date(student.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
                             {student.region && <span className="px-1 py-0.2 rounded bg-gray-100 dark:bg-gray-800 text-[10px] font-semibold text-gray-600 dark:text-gray-400">{student.region}</span>}
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                          {student.createdAt ? new Date(student.createdAt).toLocaleDateString() : '—'}
-                        </span>
-                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                          {student.createdAt ? new Date(student.createdAt).toLocaleTimeString() : ''}
-                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-4">
