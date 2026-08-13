@@ -69,7 +69,25 @@ export const getStudents = async (req, res, next) => {
 
     // Phase / Counseling Day filter
     if (req.query.phase) {
-      filter.phase = req.query.phase;
+      const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
+      if (counselingSetting?.value) {
+        const startDate = new Date(counselingSetting.value);
+        const targetDate = new Date(startDate);
+        targetDate.setDate(startDate.getDate() + (Number(req.query.phase) - 1));
+        
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Kolkata',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+        const targetDateStr = formatter.format(targetDate);
+        const startOfDay = new Date(`${targetDateStr}T00:00:00+05:30`);
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+        
+        filter.tokenGeneratedAt = { $gte: startOfDay, $lt: endOfDay };
+      }
     }
 
     // Status filter
@@ -406,7 +424,25 @@ export const exportStudents = async (req, res, next) => {
       filter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
     if (req.query.phase) {
-      filter.phase = req.query.phase;
+      const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
+      if (counselingSetting?.value) {
+        const startDate = new Date(counselingSetting.value);
+        const targetDate = new Date(startDate);
+        targetDate.setDate(startDate.getDate() + (Number(req.query.phase) - 1));
+        
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Kolkata',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+        const targetDateStr = formatter.format(targetDate);
+        const startOfDay = new Date(`${targetDateStr}T00:00:00+05:30`);
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+        
+        filter.tokenGeneratedAt = { $gte: startOfDay, $lt: endOfDay };
+      }
     }
     const rawStudents = await Student.find(filter)
       .populate("uploadedBy", "name email")

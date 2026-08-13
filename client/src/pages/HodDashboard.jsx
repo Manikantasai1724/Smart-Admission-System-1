@@ -297,7 +297,7 @@ function HodDashboard() {
           'Parent Phone': student.parentPhone || '—',
           'Department': student.department || '—',
           'Rank': student.rank || '—',
-          'Status': isCompleted ? 'Completed' : 'Pending',
+          'Status': student.currentStep === 5 ? 'Completed' : (student.currentStep > 0 ? 'Pending' : 'Not Visited'),
         };
       });
 

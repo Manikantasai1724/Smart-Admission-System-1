@@ -6,6 +6,7 @@
 
 import Student from '../models/Student.js';
 import AuditLog from '../models/AuditLog.js';
+import Settings from '../models/Settings.js';
 
 /**
  * GET /api/dashboard/stats
@@ -18,33 +19,47 @@ export const getStats = async (req, res, next) => {
 
     // Optionally scope to the HOD's department
     if (req.query.department) {
-      baseFilter.department = req.query.department;
+      baseFilter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
 
     // Optionally scope to the counseling day (phase)
+    // We will dynamically filter by tokenGeneratedAt instead of the phase string field
+
+    let targetDate = new Date();
     if (req.query.phase) {
-      baseFilter.phase = req.query.phase;
+      const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
+      if (counselingSetting?.value) {
+        const startDate = new Date(counselingSetting.value);
+        targetDate = new Date(startDate);
+        targetDate.setDate(startDate.getDate() + (Number(req.query.phase) - 1));
+      }
     }
 
-    const now = new Date();
     const formatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Asia/Kolkata',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
     });
-    const todayStr = formatter.format(now);
-    const startOfDay = new Date(`${todayStr}T00:00:00+05:30`);
+    const targetDateStr = formatter.format(targetDate);
+    const startOfDay = new Date(`${targetDateStr}T00:00:00+05:30`);
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+
+    // Apply the dynamic tokenGeneratedAt filter for the specific phase
+    if (req.query.phase) {
+      baseFilter.tokenGeneratedAt = { $gte: startOfDay, $lt: endOfDay };
+    }
 
     // ── Single Pass Aggregation + Parallel Audit Log Query ─────────────
     const overallFilter = { isActive: true };
     if (req.query.department) {
-      overallFilter.department = req.query.department;
+      overallFilter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
 
     const overallCompletedFilter = { isActive: true, currentStep: 5 };
     if (req.query.department) {
-      overallCompletedFilter.department = req.query.department;
+      overallCompletedFilter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
 
     const [statsAggregate, recentActivity, overallTotal, overallCompleted] = await Promise.all([
@@ -67,7 +82,8 @@ export const getStats = async (req, res, next) => {
                     $and: [
                       { $gt: ['$currentStep', 0] }, 
                       { $lt: ['$currentStep', 5] },
-                      { $gte: ['$tokenGeneratedAt', startOfDay] }
+                      { $gte: ['$tokenGeneratedAt', startOfDay] },
+                      { $lt: ['$tokenGeneratedAt', endOfDay] }
                     ] 
                   }, 
                   1, 
@@ -81,7 +97,8 @@ export const getStats = async (req, res, next) => {
                   { 
                     $and: [
                       { $eq: ['$currentStep', 5] },
-                      { $gte: ['$completedAt', startOfDay] }
+                      { $gte: ['$completedAt', startOfDay] },
+                      { $lt: ['$completedAt', endOfDay] }
                     ]
                   }, 
                   1, 
@@ -101,7 +118,12 @@ export const getStats = async (req, res, next) => {
             todayCount: {
               $sum: {
                 $cond: [
-                  { $gte: ['$completedAt', startOfDay] },
+                  { 
+                    $and: [
+                      { $gte: ['$completedAt', startOfDay] },
+                      { $lt: ['$completedAt', endOfDay] }
+                    ]
+                  },
                   1,
                   0,
                 ],
@@ -163,7 +185,25 @@ export const getDepartmentProgress = async (req, res, next) => {
   try {
     const match = { isActive: true };
     if (req.query.phase) {
-      match.phase = req.query.phase;
+      const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
+      if (counselingSetting?.value) {
+        const startDate = new Date(counselingSetting.value);
+        const targetDate = new Date(startDate);
+        targetDate.setDate(startDate.getDate() + (Number(req.query.phase) - 1));
+        
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Kolkata',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+        const targetDateStr = formatter.format(targetDate);
+        const startOfDay = new Date(`${targetDateStr}T00:00:00+05:30`);
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+        
+        match.tokenGeneratedAt = { $gte: startOfDay, $lt: endOfDay };
+      }
     }
 
     const progress = await Student.aggregate([
