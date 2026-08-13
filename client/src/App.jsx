@@ -19,7 +19,7 @@ const StudentsPage = lazy(() => import("./pages/StudentsPage"));
 const StudentDetailPage = lazy(() => import("./pages/StudentDetailPage"));
 const UploadPage = lazy(() => import("./pages/UploadPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
-
+// Updated deployment code
 function App() {
   return (
     <ThemeProvider>
