@@ -1,27 +1,7 @@
 import Settings from "../models/Settings.js";
 import Student from "../models/Student.js";
 
-// Helper to calculate student phase
-const calculateStudentPhase = (createdAt, startDateString) => {
-  if (!startDateString) return "1";
-  
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  
-  const createdStr = formatter.format(new Date(createdAt));
-  const startStr = formatter.format(new Date(startDateString));
-  
-  const createdDate = new Date(`${createdStr}T00:00:00Z`);
-  const startDate = new Date(`${startStr}T00:00:00Z`);
-  
-  const diffTime = createdDate.getTime() - startDate.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  return String(Math.max(1, diffDays + 1));
-};
+// Phase calculation was removed as it collided with the Round concept.
 
 export const getSettings = async (req, res, next) => {
   try {
@@ -49,23 +29,7 @@ export const updateSettings = async (req, res, next) => {
       { new: true, upsert: true }
     );
 
-    // If we updated counselingStartDate, recalculate the phase for all students
-    if (key === "counselingStartDate" && value) {
-      const students = await Student.find({ isActive: true });
-      const bulkOps = students.map(student => {
-        const calculatedPhase = calculateStudentPhase(student.createdAt, value);
-        return {
-          updateOne: {
-            filter: { _id: student._id },
-            update: { phase: calculatedPhase }
-          }
-        };
-      });
 
-      if (bulkOps.length > 0) {
-        await Student.bulkWrite(bulkOps);
-      }
-    }
 
     res.status(200).json({
       success: true,

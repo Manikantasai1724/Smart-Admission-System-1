@@ -44,6 +44,7 @@ function StudentDetailPage() {
   const [saving, setSaving] = useState(false);
   const [statusChanges, setStatusChanges] = useState({});
   const [auditHistory, setAuditHistory] = useState([]);
+  const [otherPhases, setOtherPhases] = useState([]);
 
   const fetchStudent = useCallback(async () => {
     try {
@@ -60,6 +61,7 @@ function StudentDetailPage() {
         currentStep: studentData.currentStep || 0,
       });
       setAuditHistory(logsRes.data.logs || logsRes.data || []);
+      setOtherPhases(studentRes.data.otherPhases || []);
     } catch (error) {
       console.error("Error fetching student:", error);
       addToast("error", "Failed to load student details");
@@ -167,6 +169,13 @@ function StudentDetailPage() {
                 label="Department"
                 value={student.department}
               />
+              {student.slideBranch && (
+                <InfoRow 
+                  icon={ArrowLeft} 
+                  label="Slide Branch" 
+                  value={student.slideBranch} 
+                />
+              )}
               {student.gender && (
                 <InfoRow icon={User} label="Gender" value={student.gender} />
               )}
@@ -242,6 +251,32 @@ function StudentDetailPage() {
           {/* Timeline */}
           <StudentTimeline student={{ ...student, ...statusChanges }} />
 
+          {/* Previous Phase History */}
+          {otherPhases && otherPhases.length > 0 && (
+            <div className="glass-card p-6 border-indigo-200 dark:border-indigo-900/30">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Other Phase Records
+              </h3>
+              <div className="space-y-4">
+                {otherPhases.map((p, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-gray-50 dark:bg-primary-900/10 border border-gray-100 dark:border-primary-400/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-primary-600 dark:text-primary-400">Phase {p.phase}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${p.currentStep >= 5 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {p.currentStep >= 5 ? 'Completed' : 'Pending'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-300">
+                      <div><span className="font-semibold">Department:</span> {p.department}</div>
+                      <div><span className="font-semibold">Rank:</span> {p.rank}</div>
+                      <div><span className="font-semibold">Token:</span> {p.tokenNumber ? `#${p.tokenNumber}` : 'N/A'}</div>
+                      <div><span className="font-semibold">Visited:</span> {p.tokenDate || 'N/A'}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Audit History */}
           {user?.role?.toLowerCase() !== 'hod' && auditHistory.length > 0 && (

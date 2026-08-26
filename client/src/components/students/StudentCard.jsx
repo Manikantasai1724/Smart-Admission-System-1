@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, Clock, Phone, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { usePhase } from '../../context/PhaseContext';
 import { generateStudentToken } from '../../services/studentService';
 import Modal from '../common/Modal';
 import { calculateCompletionPercentage, formatDate } from '../../utils/helpers';
@@ -12,6 +13,7 @@ function StudentCard({ student, onStatusChange, onTokenGenerated, showActions = 
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addToast } = useToast();
+  const { isReadOnly } = usePhase();
 
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -145,12 +147,19 @@ function StudentCard({ student, onStatusChange, onTokenGenerated, showActions = 
           </div>
         </div>
 
-        {/* Rank */}
-        {student.rank && (
-          <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
-            Rank: <span className="font-semibold text-gray-600 dark:text-gray-300">{student.rank}</span>
-          </p>
-        )}
+        {/* Rank & Slide Info */}
+        <div className="flex justify-between items-center mb-4">
+          {student.rank && (
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              Rank: <span className="font-semibold text-gray-600 dark:text-gray-300">{student.rank}</span>
+            </p>
+          )}
+          {student.slideBranch && (
+            <p className="text-[10px] px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200/50">
+              Slide Branch: <span className="font-bold">{student.slideBranch}</span>
+            </p>
+          )}
+        </div>
 
         {/* Status and Steps Indicators */}
         <div className="flex items-center gap-5 mb-6">
@@ -184,7 +193,7 @@ function StudentCard({ student, onStatusChange, onTokenGenerated, showActions = 
 
       <div className="mt-auto space-y-3">
         {/* Primary Sequential Action Button */}
-        {showActions && user?.role?.toLowerCase() === 'volunteer' && currentStep < 5 && (
+        {showActions && user?.role?.toLowerCase() === 'volunteer' && currentStep < 5 && !isReadOnly && (
           <button
             onClick={currentStep === 0 ? handleOpenTokenModal : handleOpenConfirmModal}
             className="w-full py-2.5 rounded-xl text-sm font-bold bg-primary-600 hover:bg-primary-700 text-white shadow-md shadow-primary-600/25 transition-all duration-200"

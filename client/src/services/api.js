@@ -7,13 +7,28 @@ const api = axios.create({
   },
 });
 
-// Request interceptor: attach Bearer token
+// Request interceptor: attach Bearer token and current phase
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Automatically attach the current phase from the URL to all API calls
+    const urlParams = new URLSearchParams(window.location.search);
+    const phase = urlParams.get('phase') || '2';
+    
+    if (config.method === 'get' || config.method === 'delete') {
+      config.params = { ...config.params, phase };
+    } else {
+      // For POST/PUT requests, you might want to pass it as a query param too
+      // so the middleware handles it correctly
+      config.url = config.url.includes('?') 
+        ? `${config.url}&phase=${phase}` 
+        : `${config.url}?phase=${phase}`;
+    }
+    
     return config;
   },
   (error) => Promise.reject(error)

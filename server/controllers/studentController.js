@@ -67,27 +67,21 @@ export const getStudents = async (req, res, next) => {
       filter.department = req.query.department;
     }
 
-    // Phase / Counseling Day filter
-    if (req.query.phase) {
-      const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
-      if (counselingSetting?.value) {
-        const startDate = new Date(counselingSetting.value);
-        const targetDate = new Date(startDate);
-        targetDate.setDate(startDate.getDate() + (Number(req.query.phase) - 1));
-        
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Asia/Kolkata',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        });
-        const targetDateStr = formatter.format(targetDate);
-        const startOfDay = new Date(`${targetDateStr}T00:00:00+05:30`);
-        const endOfDay = new Date(startOfDay);
-        endOfDay.setDate(endOfDay.getDate() + 1);
-        
-        filter.tokenGeneratedAt = { $gte: startOfDay, $lt: endOfDay };
-      }
+    // Phase filter
+    if (req.query.phase !== 'all') {
+      filter.phase = req.query.phase || '2';
+    }
+
+    // Exact Date filter
+    if (req.query.date) {
+      const targetDate = new Date(`${req.query.date}T00:00:00+05:30`);
+      const nextDate = new Date(targetDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      
+      filter.$or = [
+        { tokenGeneratedAt: { $gte: targetDate, $lt: nextDate } },
+        { completedAt: { $gte: targetDate, $lt: nextDate } }
+      ];
     }
 
     // Status filter
@@ -220,10 +214,18 @@ export const getStudentById = async (req, res, next) => {
       .populate("updatedBy", "name email")
       .lean();
 
+    // Fetch previous/other phase records for the same hall ticket
+    const otherPhases = await Student.find({
+      hallTicketNumber: student.hallTicketNumber,
+      _id: { $ne: student._id },
+      isActive: true
+    }).sort({ phase: 1 }).lean();
+
     res.status(200).json({
       success: true,
       student,
       auditLogs,
+      otherPhases,
     });
   } catch (error) {
     next(error);
@@ -274,7 +276,8 @@ export const uploadStudents = async (req, res, next) => {
     const { inserted, skipped, errors, invalidRows } = await bulkInsertStudents(
       parsedStudents,
       req.user.id,
-      req.user.role
+      req.user.role,
+      req.query.phase || '1'
     );
 
     if (inserted > 0) {
@@ -423,26 +426,10 @@ export const exportStudents = async (req, res, next) => {
     if (req.query.department) {
       filter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
-    if (req.query.phase) {
-      const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
-      if (counselingSetting?.value) {
-        const startDate = new Date(counselingSetting.value);
-        const targetDate = new Date(startDate);
-        targetDate.setDate(startDate.getDate() + (Number(req.query.phase) - 1));
-        
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Asia/Kolkata',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        });
-        const targetDateStr = formatter.format(targetDate);
-        const startOfDay = new Date(`${targetDateStr}T00:00:00+05:30`);
-        const endOfDay = new Date(startOfDay);
-        endOfDay.setDate(endOfDay.getDate() + 1);
-        
-        filter.tokenGeneratedAt = { $gte: startOfDay, $lt: endOfDay };
-      }
+    if (req.query.phase && req.query.phase !== 'all') {
+      filter.phase = req.query.phase;
+    } else if (req.query.phase !== 'all') {
+      filter.phase = '1';
     }
     const rawStudents = await Student.find(filter)
       .populate("uploadedBy", "name email")
@@ -473,9 +460,22 @@ export const exportStudents = async (req, res, next) => {
  */
 export const deleteAllStudents = async (req, res, next) => {
   try {
-    await Student.deleteMany({});
-    await AuditLog.deleteMany({}); // optionally clear student audit logs
-    await DailyCounter.deleteMany({}); // Clear daily counters as well
+    const phase = req.query.phase || '2';
+    
+    // Find all students in this phase
+    const studentsInPhase = await Student.find({ phase }).select('_id');
+    const studentIds = studentsInPhase.map(s => s._id);
+
+    // Only delete AuditLogs for the students in this specific phase
+    if (studentIds.length > 0) {
+      await AuditLog.deleteMany({ studentId: { $in: studentIds } });
+    }
+    
+    // Only delete students for the current phase
+    await Student.deleteMany({ phase });
+    
+    // We intentionally do NOT delete DailyCounters globally, 
+    // to prevent wiping out token sequences.
     emitDashboardRefresh();
     res.status(200).json({
       success: true,
@@ -566,11 +566,8 @@ export const generateStudentToken = async (req, res, next) => {
     student.tokenGeneratedAt = new Date();
     student.tokenDate = todayStr;
     
-    // Update student's phase to the current counseling day based on visit date
-    const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
-    if (counselingSetting?.value) {
-      student.phase = calculateStudentPhase(new Date(), counselingSetting.value);
-    }
+    // The student's phase is already set to Phase 1 or Phase 2 upon upload.
+    // We no longer overwrite the phase with a Day Index.
     
     if (student.currentStep === 0) {
       student.currentStep = 1;

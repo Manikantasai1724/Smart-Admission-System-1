@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
 import { SocketProvider } from "./context/SocketContext";
+import { PhaseProvider } from "./context/PhaseContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 
@@ -26,7 +27,8 @@ function App() {
       <AuthProvider>
         <ToastProvider>
           <SocketProvider>
-            <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950"><LoadingSpinner message="Loading..." /></div>}>
+            <PhaseProvider>
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950"><LoadingSpinner message="Loading..." /></div>}>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Navigate to="/" replace />} />
@@ -85,6 +87,7 @@ function App() {
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
+            </PhaseProvider>
           </SocketProvider>
         </ToastProvider>
       </AuthProvider>

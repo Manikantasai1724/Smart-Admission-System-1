@@ -10,13 +10,22 @@ async function dropIndex() {
     try {
       await mongoose.connection.collection('students').dropIndex('tokenNumber_1');
       console.log('Successfully dropped tokenNumber_1 index');
-    } catch (err) {
-      if (err.codeName === 'IndexNotFound') {
-        console.log('Index tokenNumber_1 not found, it might have been already dropped.');
-      } else {
-        console.error('Error dropping index:', err);
-      }
-    }
+    } catch (err) {}
+
+    try {
+      await mongoose.connection.collection('students').dropIndex('hallTicketNumber_1');
+      console.log('Successfully dropped hallTicketNumber_1 index');
+    } catch (err) {}
+
+    try {
+      await mongoose.connection.collection('students').dropIndex('email_1');
+      console.log('Successfully dropped email_1 index');
+    } catch (err) {}
+    
+    try {
+      await mongoose.connection.collection('users').dropIndex('email_1');
+      console.log('Successfully dropped email_1 index from users');
+    } catch (err) {}
     
   } catch (error) {
     console.error('Connection error:', error);

@@ -22,42 +22,39 @@ export const getStats = async (req, res, next) => {
       baseFilter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
 
-    // Optionally scope to the counseling day (phase)
-    // We will dynamically filter by tokenGeneratedAt instead of the phase string field
-
-    let targetDate = new Date();
-    if (req.query.phase) {
-      const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
-      if (counselingSetting?.value) {
-        const startDate = new Date(counselingSetting.value);
-        targetDate = new Date(startDate);
-        targetDate.setDate(startDate.getDate() + (Number(req.query.phase) - 1));
-      }
+    // Phase filter
+    if (req.query.phase !== 'all') {
+      baseFilter.phase = req.query.phase || '2';
     }
 
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Kolkata',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-    const targetDateStr = formatter.format(targetDate);
+    // Calculate boundaries for stats based on requested date or today
+    const targetDateStr = req.query.date ? req.query.date : (() => {
+      const targetDate = new Date();
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      return formatter.format(targetDate);
+    })();
     const startOfDay = new Date(`${targetDateStr}T00:00:00+05:30`);
     const endOfDay = new Date(startOfDay);
     endOfDay.setDate(endOfDay.getDate() + 1);
 
-    // Apply the dynamic tokenGeneratedAt filter for the specific phase
-    if (req.query.phase) {
-      baseFilter.tokenGeneratedAt = { $gte: startOfDay, $lt: endOfDay };
-    }
-
     // ── Single Pass Aggregation + Parallel Audit Log Query ─────────────
     const overallFilter = { isActive: true };
+    if (req.query.phase !== 'all') {
+      overallFilter.phase = req.query.phase || '2';
+    }
     if (req.query.department) {
       overallFilter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
 
     const overallCompletedFilter = { isActive: true, currentStep: 5 };
+    if (req.query.phase !== 'all') {
+      overallCompletedFilter.phase = req.query.phase || '2';
+    }
     if (req.query.department) {
       overallCompletedFilter.department = { $regex: `^${req.query.department}$`, $options: "i" };
     }
@@ -184,26 +181,8 @@ export const getStats = async (req, res, next) => {
 export const getDepartmentProgress = async (req, res, next) => {
   try {
     const match = { isActive: true };
-    if (req.query.phase) {
-      const counselingSetting = await Settings.findOne({ key: "counselingStartDate" });
-      if (counselingSetting?.value) {
-        const startDate = new Date(counselingSetting.value);
-        const targetDate = new Date(startDate);
-        targetDate.setDate(startDate.getDate() + (Number(req.query.phase) - 1));
-        
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Asia/Kolkata',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        });
-        const targetDateStr = formatter.format(targetDate);
-        const startOfDay = new Date(`${targetDateStr}T00:00:00+05:30`);
-        const endOfDay = new Date(startOfDay);
-        endOfDay.setDate(endOfDay.getDate() + 1);
-        
-        match.tokenGeneratedAt = { $gte: startOfDay, $lt: endOfDay };
-      }
+    if (req.query.phase !== 'all') {
+      match.phase = req.query.phase || '1';
     }
 
     const progress = await Student.aggregate([

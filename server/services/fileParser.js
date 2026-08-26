@@ -82,6 +82,9 @@ const COLUMN_MAP = {
   phase: "phase",
   "phas e": "phase",
   formFilled: "formFilled",
+  "slide branch": "slideBranch",
+  slidebranch: "slideBranch",
+  slide_branch: "slideBranch",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -131,6 +134,12 @@ const normalizeRow = (row) => {
     student._validationErrors = errors;
   } else {
     student._isValid = true;
+  }
+
+  // Filter out any students that are not in our 3 allowed branches
+  const ALLOWED_BRANCHES = ["CSE", "AIM", "CIC"];
+  if (student.department && !ALLOWED_BRANCHES.includes(student.department.toUpperCase())) {
+    return null; // Drop row entirely if it's a different branch
   }
 
   return student;

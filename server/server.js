@@ -23,6 +23,7 @@ import compression from 'compression';
 import config from './config/env.js';
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
+import { requirePhase } from './middleware/requirePhase.js';
 import { initializeSocket } from './services/socketService.js';
 
 // ── Route imports ────────────────────────────────────────────────────────────
@@ -68,7 +69,7 @@ app.get('/api/health', (_req, res) => {
 
 // ── API routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
-app.use('/api/students', studentRoutes);
+app.use('/api/students', requirePhase, studentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/users', userRoutes);

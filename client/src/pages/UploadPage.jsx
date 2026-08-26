@@ -3,11 +3,13 @@ import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Info, Loader, Trash2
 import DashboardLayout from '../components/common/DashboardLayout';
 import FileUpload from '../components/students/FileUpload';
 import Modal from '../components/common/Modal';
-import { useToast } from '../context/ToastContext';
 import { uploadStudents, deleteAllStudents } from '../services/studentService';
+import { usePhase } from '../context/PhaseContext';
+import { useToast } from '../context/ToastContext';
 
 function UploadPage() {
   const { addToast } = useToast();
+  const { isReadOnly } = usePhase();
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewData, setPreviewData] = useState([]);
@@ -112,10 +114,15 @@ function UploadPage() {
               Upload student data from Excel or CSV files to the system
             </p>
           </div>
-          <div>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            {isReadOnly && (
+              <span className="text-sm font-medium text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+                ⚠️ Uploads disabled in Phase 1 (Read-only)
+              </span>
+            )}
             <button
               onClick={() => setIsDeleteModalOpen(true)}
-              disabled={deleting}
+              disabled={deleting || isReadOnly}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800/30 transition-colors font-medium text-sm disabled:opacity-50"
             >
               {deleting ? (
@@ -132,7 +139,9 @@ function UploadPage() {
           {/* Main Upload Area */}
           <div className="lg:col-span-2 space-y-6">
             {/* File Upload */}
-            <FileUpload onFileSelect={handleFileSelect} />
+            <div className={isReadOnly ? 'opacity-50 pointer-events-none' : ''}>
+              <FileUpload onFileSelect={handleFileSelect} />
+            </div>
 
             {/* Preview Table */}
             {previewData.length > 0 && (

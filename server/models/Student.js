@@ -17,7 +17,6 @@ const studentSchema = new mongoose.Schema(
     hallTicketNumber: {
       type: String,
       required: [true, "Hall ticket number is required"],
-      unique: true,
       uppercase: true,
       trim: true,
     },
@@ -61,6 +60,16 @@ const studentSchema = new mongoose.Schema(
       default: "",
     },
     phase: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    phase1Ref: {
+      branch: String,
+      status: String,
+      linkedAt: Date,
+    },
+    slideBranch: {
       type: String,
       trim: true,
       default: "",
@@ -169,7 +178,8 @@ const studentSchema = new mongoose.Schema(
 );
 
 // ── Indexes ──────────────────────────────────────────────────────────────────
-// hallTicketNumber: unique constraint already defined at field level
+// Compound unique index for multi-phase support
+studentSchema.index({ hallTicketNumber: 1, phase: 1 }, { unique: true });
 studentSchema.index({ rank: 1 });
 studentSchema.index({ department: 1 });
 studentSchema.index({ email: 1 });

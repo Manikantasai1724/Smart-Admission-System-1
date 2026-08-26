@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { getStudents } from '../services/studentService';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
+import { usePhase } from '../context/PhaseContext';
 
 const DetailItem = ({ label, value, isBadge, isProminent, isPhone }) => (
   <div className="flex flex-col gap-2">
@@ -33,6 +34,7 @@ function StudentsPage() {
   const { addToast } = useToast();
   const { socket } = useSocket();
   const { user } = useAuth();
+  const { phase } = usePhase();
 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false); // Default to false for initial empty state
@@ -101,14 +103,14 @@ function StudentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, filters, hasSearched, selectedStudent, addToast]);
+  }, [hasSearched, pagination.page, pagination.limit, filters, addToast, selectedStudent, phase]);
 
   // Fetch when filters or page changes, but only if we have searched at least once
   useEffect(() => {
     if (hasSearched) {
       fetchStudents();
     }
-  }, [filters, pagination.page]);
+  }, [filters, pagination.page, fetchStudents]);
 
   // Real-time updates
   useEffect(() => {
@@ -288,7 +290,14 @@ function StudentsPage() {
                 </div>
                 <div className="text-center md:text-left text-white z-10">
                   <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">{selectedStudent.name}</h2>
-                  <p className="text-primary-100 font-semibold text-xl md:text-2xl tracking-wide">{selectedStudent.hallTicket || selectedStudent.hallTicketNumber || 'No Hall Ticket'}</p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-primary-100 font-semibold text-xl md:text-2xl tracking-wide">{selectedStudent.hallTicket || selectedStudent.hallTicketNumber || 'No Hall Ticket'}</p>
+                    {selectedStudent.phase1Ref && (
+                      <span className="bg-white/20 text-white px-2 py-1 rounded text-xs font-bold whitespace-nowrap">
+                        Phase 1: {selectedStudent.phase1Ref.branch} ({selectedStudent.phase1Ref.status})
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               
@@ -345,9 +354,16 @@ function StudentsPage() {
                             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:shadow-md transition-shadow">
                               {s.name?.charAt(0)?.toUpperCase() || '?'}
                             </div>
-                            <span className="font-medium text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                              {s.name}
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                {s.name}
+                              </span>
+                              {s.phase1Ref && (
+                                <span className="text-[10px] bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400 px-1.5 py-0.5 rounded mt-0.5 w-max">
+                                  Ph1: {s.phase1Ref.branch}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">{s.hallTicket || s.hallTicketNumber || 'N/A'}</td>

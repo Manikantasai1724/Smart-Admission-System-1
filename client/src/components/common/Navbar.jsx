@@ -3,6 +3,7 @@ import { Sun, Moon, LogOut, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Modal from './Modal';
+import PhaseSwitcher from './PhaseSwitcher';
 
 function Navbar({ onToggleSidebar }) {
   const { user, logout } = useAuth();
@@ -35,6 +36,10 @@ function Navbar({ onToggleSidebar }) {
               <span className="text-xl font-bold gradient-text hidden sm:block">
                 AdmitTrack
               </span>
+            </div>
+            
+            <div className="hidden sm:block">
+              <PhaseSwitcher />
             </div>
           </div>
 

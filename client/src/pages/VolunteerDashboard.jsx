@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useToast } from '../context/ToastContext';
+import { usePhase } from '../context/PhaseContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { getStudents, updateStudentStatus } from '../services/studentService';
 import { getStats } from '../services/dashboardService';
@@ -17,6 +18,7 @@ function VolunteerDashboard() {
   const { user } = useAuth();
   const { socket } = useSocket();
   const { addToast } = useToast();
+  const { phase } = usePhase();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('text'); // 'text' or 'token'
@@ -45,7 +47,7 @@ function VolunteerDashboard() {
         console.error('Error fetching stats:', error);
       }
     }
-  }, []);
+  }, [phase]);
 
   const fetchStudents = useCallback(async (search = '', showLoader = true, signal) => {
     try {
@@ -80,7 +82,7 @@ function VolunteerDashboard() {
     } finally {
       if (showLoader) setLoading(false);
     }
-  }, [addToast, searchType, user?.department]);
+  }, [addToast, searchType, user?.department, phase]);
 
   useEffect(() => {
     const controller = new AbortController();

@@ -5,12 +5,14 @@ import userService from "../services/userService";
 import studentService from "../services/studentService";
 import * as settingsService from "../services/settingsService";
 import { useToast } from "../context/ToastContext";
+import { usePhase } from "../context/PhaseContext";
 import { DEPARTMENTS } from "../utils/constants";
 
 function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { addToast } = useToast();
+  const { phase } = usePhase();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -38,12 +40,30 @@ function AdminDashboard() {
       if (usersRes.data?.users) {
         setUsers(usersRes.data.users);
       }
-      if (settingsRes.data?.settings?.counselingStartDate) {
-        const dateStr = settingsRes.data.settings.counselingStartDate.split("T")[0];
-        setStartDate(dateStr);
-      }
-      if (settingsRes.data?.settings?.counselingDurationDays) {
-        setDurationDays(Number(settingsRes.data.settings.counselingDurationDays));
+      if (phase === '2') {
+        if (settingsRes.data?.settings?.phase2StartDate) {
+          const dateStr = settingsRes.data.settings.phase2StartDate.split("T")[0];
+          setStartDate(dateStr);
+        } else {
+          setStartDate("");
+        }
+        if (settingsRes.data?.settings?.phase2DurationDays) {
+          setDurationDays(Number(settingsRes.data.settings.phase2DurationDays));
+        } else {
+          setDurationDays(3);
+        }
+      } else {
+        if (settingsRes.data?.settings?.counselingStartDate) {
+          const dateStr = settingsRes.data.settings.counselingStartDate.split("T")[0];
+          setStartDate(dateStr);
+        } else {
+          setStartDate("");
+        }
+        if (settingsRes.data?.settings?.counselingDurationDays) {
+          setDurationDays(Number(settingsRes.data.settings.counselingDurationDays));
+        } else {
+          setDurationDays(3);
+        }
       }
     } catch (err) {
       if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
@@ -53,7 +73,7 @@ function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, phase]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -68,7 +88,7 @@ function AdminDashboard() {
     const controller = new AbortController();
     loadAdminData(controller.signal);
     return () => controller.abort();
-  }, [loadAdminData]);
+  }, [loadAdminData, phase]);
 
   const handleOpenModal = (user = null) => {
     if (user) {
@@ -148,9 +168,11 @@ function AdminDashboard() {
     }
     try {
       setSavingSetting(true);
-      await settingsService.updateSetting("counselingStartDate", startDate);
-      await settingsService.updateSetting("counselingDurationDays", Number(durationDays));
-      addToast("success", "Counseling configuration updated successfully! Student phases recalculated.");
+      const startKey = phase === '2' ? 'phase2StartDate' : 'counselingStartDate';
+      const durationKey = phase === '2' ? 'phase2DurationDays' : 'counselingDurationDays';
+      await settingsService.updateSetting(startKey, startDate);
+      await settingsService.updateSetting(durationKey, Number(durationDays));
+      addToast("success", "Counseling configuration updated successfully!");
     } catch (err) {
       addToast("error", err.response?.data?.message || "Failed to update configuration");
     } finally {
@@ -188,43 +210,51 @@ function AdminDashboard() {
       </div>
 
       {/* Counseling Settings Card */}
-      <div className="glass-card p-6 mb-8 border border-white/20 dark:border-primary-400/10 rounded-2xl">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-          📅 Counseling Configuration
-        </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Select the counseling starting date and duration. Counseling days on the HOD Dashboard will be counted and generated from these settings.
-        </p>
-        <div className="flex flex-col md:flex-row items-end gap-4">
-          <div className="flex-1 w-full">
-            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Counseling Start Date</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-primary-400/10 bg-white/50 dark:bg-primary-950/25 text-gray-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
-            />
-          </div>
-          <div className="w-full md:w-48">
-            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Total Counseling Days</label>
-            <input
-              type="number"
-              min="1"
-              max="30"
-              value={durationDays}
-              onChange={(e) => setDurationDays(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-primary-400/10 bg-white/50 dark:bg-primary-950/25 text-gray-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
-            />
-          </div>
-          <button
-            onClick={handleSaveSettings}
-            disabled={savingSetting}
-            className="w-full md:w-auto px-6 py-2.5 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
-          >
-            {savingSetting ? "Saving..." : "Save Configuration"}
-          </button>
+      {phase === 'all' ? (
+        <div className="glass-card p-6 mb-8 border border-white/20 dark:border-primary-400/10 rounded-2xl bg-amber-50 dark:bg-amber-900/10">
+          <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+            ⚠️ Please select a specific phase in the navigation bar to configure its settings.
+          </p>
         </div>
-      </div>
+      ) : (
+        <div className="glass-card p-6 mb-8 border border-white/20 dark:border-primary-400/10 rounded-2xl">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+            📅 Counseling Configuration (Phase {phase})
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Select the counseling starting date and duration for Phase {phase}. Counseling days on the HOD Dashboard will be counted and generated from these settings.
+          </p>
+          <div className="flex flex-col md:flex-row items-end gap-4">
+            <div className="flex-1 w-full">
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Counseling Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-primary-400/10 bg-white/50 dark:bg-primary-950/25 text-gray-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Total Counseling Days</label>
+              <input
+                type="number"
+                min="1"
+                max="30"
+                value={durationDays}
+                onChange={(e) => setDurationDays(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-primary-400/10 bg-white/50 dark:bg-primary-950/25 text-gray-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
+              />
+            </div>
+            <button
+              onClick={handleSaveSettings}
+              disabled={savingSetting}
+              className="w-full md:w-auto px-6 py-2.5 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              {savingSetting ? "Saving..." : "Save Configuration"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="glass-card rounded-2xl overflow-hidden border border-white/20 dark:border-primary-400/10">
         <div className="overflow-x-auto">

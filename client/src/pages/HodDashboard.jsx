@@ -7,6 +7,7 @@ import SkeletonLoader from '../components/common/SkeletonLoader';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useToast } from '../context/ToastContext';
+import { usePhase } from '../context/PhaseContext';
 import { getStats, getDepartmentProgress } from '../services/dashboardService';
 import studentService from '../services/studentService';
 import * as settingsService from '../services/settingsService';
@@ -18,6 +19,7 @@ function HodDashboard() {
   const { user } = useAuth();
   const { socket } = useSocket();
   const { addToast } = useToast();
+  const { phase } = usePhase();
 
   const [stats, setStats] = useState(null);
   const [departmentData, setDepartmentData] = useState([]);
@@ -25,8 +27,14 @@ function HodDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedDay, setSelectedDay] = useState('');
-  const [counselingDays, setCounselingDays] = useState(3);
-  const [counselingStartDate, setCounselingStartDate] = useState(null);
+  
+  // Phase 1 Settings
+  const [phase1Days, setPhase1Days] = useState(3);
+  const [phase1StartDate, setPhase1StartDate] = useState(null);
+  
+  // Phase 2 Settings
+  const [phase2Days, setPhase2Days] = useState(3);
+  const [phase2StartDate, setPhase2StartDate] = useState(null);
 
   // Student list states
   const [students, setStudents] = useState([]);
@@ -39,12 +47,13 @@ function HodDashboard() {
       try {
         const res = await settingsService.getSettings();
         if (isMounted) {
-          if (res.data?.settings?.counselingDurationDays) {
-            setCounselingDays(Number(res.data.settings.counselingDurationDays));
-          }
-          if (res.data?.settings?.counselingStartDate) {
-            setCounselingStartDate(res.data.settings.counselingStartDate);
-          }
+          const settings = res.data?.settings || {};
+          
+          if (settings.counselingDurationDays) setPhase1Days(Number(settings.counselingDurationDays));
+          if (settings.counselingStartDate) setPhase1StartDate(settings.counselingStartDate);
+          
+          if (settings.phase2DurationDays) setPhase2Days(Number(settings.phase2DurationDays));
+          if (settings.phase2StartDate) setPhase2StartDate(settings.phase2StartDate);
         }
       } catch (err) {
         console.error('Failed to load settings', err);
@@ -54,38 +63,73 @@ function HodDashboard() {
     return () => { isMounted = false; };
   }, []);
 
-  const formatCounselingDate = useCallback((dayIndex) => {
-    let baseDate;
-    if (counselingStartDate) {
-      const dateStr = String(counselingStartDate).split('T')[0];
-      const parts = dateStr.split('-');
-      if (parts.length === 3) {
-        baseDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  const getGeneratedTabs = useCallback(() => {
+    const tabs = [];
+    const createTabsForPhase = (startDateStr, daysCount, labelPrefix) => {
+      let baseDate;
+      if (startDateStr) {
+        const dateStr = String(startDateStr).split('T')[0];
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+          baseDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        } else {
+          baseDate = new Date(startDateStr);
+        }
       } else {
-        baseDate = new Date(counselingStartDate);
+        baseDate = new Date();
       }
-    } else {
-      baseDate = new Date();
+
+      for (let i = 1; i <= daysCount; i++) {
+        const targetDate = new Date(baseDate);
+        targetDate.setDate(baseDate.getDate() + (i - 1));
+        
+        const monthStr = targetDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+        const dayStr = String(targetDate.getDate()).padStart(2, '0');
+        const exactDateStr = targetDate.toLocaleDateString('en-CA'); // YYYY-MM-DD
+        
+        tabs.push({
+          id: exactDateStr,
+          label: `${labelPrefix} ${i}`,
+          displayDate: `${monthStr}-${dayStr}`
+        });
+      }
+    };
+
+    if (phase === '1' || phase === 'all') {
+      createTabsForPhase(phase1StartDate, phase1Days, phase === 'all' ? 'P1 Day' : 'Day');
+    }
+    if (phase === '2' || phase === 'all') {
+      createTabsForPhase(phase2StartDate, phase2Days, phase === 'all' ? 'P2 Day' : 'Day');
     }
 
-    const targetDate = new Date(baseDate);
-    targetDate.setDate(baseDate.getDate() + (dayIndex - 1));
+    return tabs;
+  }, [phase, phase1StartDate, phase1Days, phase2StartDate, phase2Days]);
 
-    const monthStr = targetDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-    const dayStr = String(targetDate.getDate()).padStart(2, '0');
-    return `${monthStr}-${dayStr}`;
-  }, [counselingStartDate]);
+  const generatedTabs = getGeneratedTabs();
+
+  // Reset selectedDay when phase changes or tabs update
+  useEffect(() => {
+    if (generatedTabs.length > 0) {
+      // Check if current selectedDay is still valid in the new tabs
+      const isValid = generatedTabs.some(t => t.id === selectedDay);
+      if (!isValid) {
+        setSelectedDay('');
+      }
+    } else {
+      setSelectedDay('');
+    }
+  }, [generatedTabs, selectedDay]);
 
   const fetchDashboardData = useCallback(async (signal) => {
     try {
-      setLoading(true);
+      if (!stats) setLoading(true);
       const params = {};
       if (selectedDepartment) params.department = selectedDepartment;
-      if (selectedDay) params.phase = selectedDay;
+      if (selectedDay) params.date = selectedDay;
 
       const [statsRes, deptRes] = await Promise.all([
         getStats(params, { signal }),
-        getDepartmentProgress(selectedDay ? { phase: selectedDay } : {}, { signal }),
+        getDepartmentProgress(selectedDay ? { date: selectedDay } : {}, { signal }),
       ]);
       setStats(statsRes.data.stats || statsRes.data);
       const allDepts = deptRes.data.departments || deptRes.data || [];
@@ -104,7 +148,7 @@ function HodDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [addToast, selectedDepartment, selectedDay]);
+  }, [addToast, selectedDepartment, selectedDay, phase]);
 
   const fetchStudentsList = useCallback(async (signal) => {
     try {
@@ -115,7 +159,7 @@ function HodDashboard() {
         status: activeTab,
       };
       if (selectedDepartment) params.department = selectedDepartment;
-      if (selectedDay) params.phase = selectedDay;
+      if (selectedDay) params.date = selectedDay;
 
       const res = await studentService.getStudents(params, { signal });
       setStudents(res.data.students || []);
@@ -126,7 +170,7 @@ function HodDashboard() {
     } finally {
       setStudentsLoading(false);
     }
-  }, [selectedDepartment, selectedDay, activeTab]);
+  }, [selectedDepartment, selectedDay, activeTab, phase]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -183,8 +227,13 @@ function HodDashboard() {
   const overallCompleted = stats?.overallCompleted ?? 0;
   const leftStudents = Math.max(0, overallTotal - overallCompleted);
   const totalStudents = stats?.total ?? stats?.totalStudents ?? 0;
-  const completed = stats?.completed ?? stats?.completedStudents ?? 0;
-  const pending = stats?.pending ?? stats?.pendingStudents ?? 0;
+  const completed = selectedDay 
+    ? (stats?.completedToday ?? 0)
+    : (stats?.completed ?? stats?.completedStudents ?? 0);
+  
+  const pending = selectedDay
+    ? (stats?.pendingToday ?? 0)
+    : (stats?.pending ?? stats?.pendingStudents ?? 0);
   const visited = pending + completed;
   const completionRate = overallTotal > 0 ? Math.round((completed / overallTotal) * 100) : 0;
 
@@ -387,14 +436,12 @@ function HodDashboard() {
               <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase px-2">Counseling</span>
               {(() => {
                 const dayFilters = [
-                  { label: 'ALL DAYS', value: '' }
+                  { label: 'ALL DAYS', value: '' },
+                  ...generatedTabs.map(t => ({
+                    label: t.displayDate,
+                    value: t.id
+                  }))
                 ];
-                for (let i = 1; i <= counselingDays; i++) {
-                  dayFilters.push({
-                    label: formatCounselingDate(i),
-                    value: String(i)
-                  });
-                }
                 return dayFilters.map((item) => {
                   const isActive = selectedDay === item.value;
                   return (
@@ -438,7 +485,7 @@ function HodDashboard() {
               delay={0}
             />
             <StatCard
-              title={selectedDay ? `Visited (${formatCounselingDate(Number(selectedDay))})` : "Visited (All Days)"}
+              title={selectedDay ? `Visited (${generatedTabs.find(t => t.id === selectedDay)?.label || selectedDay})` : "Visited (All Days)"}
               value={visited}
               icon={Users}
               color="info"
