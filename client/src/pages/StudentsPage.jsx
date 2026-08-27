@@ -306,6 +306,9 @@ function StudentsPage() {
                   <DetailItem label="Hall Ticket Number" value={selectedStudent.hallTicket || selectedStudent.hallTicketNumber} isProminent />
                   <DetailItem label="Rank" value={selectedStudent.rank} isProminent />
                   <DetailItem label="Branch" value={selectedStudent.department} isProminent />
+                  {selectedStudent.slideBranch && (
+                    <DetailItem label="Slided From" value={selectedStudent.slideBranch} isProminent />
+                  )}
                   <DetailItem label="Token Number" value={selectedStudent.tokenNumber ? `#${selectedStudent.tokenNumber}` : 'Not Generated'} isProminent />
                   
                   <DetailItem label="Student Mobile" value={selectedStudent.phone} isPhone />
@@ -369,9 +372,16 @@ function StudentsPage() {
                         <td className="px-6 py-4 whitespace-nowrap">{s.hallTicket || s.hallTicketNumber || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-700 dark:text-gray-300">{s.rank || 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-semibold text-gray-600 dark:text-gray-300">
-                            {s.department || '—'}
-                          </span>
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs font-semibold text-gray-600 dark:text-gray-300 w-max">
+                              {s.department || '—'}
+                            </span>
+                            {s.slideBranch && (
+                              <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-200/50 w-max">
+                                Slided from: {s.slideBranch}
+                              </span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
