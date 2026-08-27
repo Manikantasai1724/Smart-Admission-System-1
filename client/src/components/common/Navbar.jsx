@@ -38,7 +38,7 @@ function Navbar({ onToggleSidebar }) {
               </span>
             </div>
             
-            <div className="hidden sm:block">
+            <div className="block">
               <PhaseSwitcher />
             </div>
           </div>
