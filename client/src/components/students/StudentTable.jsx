@@ -125,9 +125,16 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                     </p>
                   </div>
                 </div>
-                <span className="inline-flex px-2 py-0.5 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-[10px] font-semibold text-primary-700 dark:text-primary-400">
-                  {student.department || '—'}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="inline-flex px-2 py-0.5 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-[10px] font-semibold text-primary-700 dark:text-primary-400">
+                    {student.department || '—'}
+                  </span>
+                  {student.slideBranch && (
+                    <span className="inline-flex px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-[9px] font-bold text-amber-600 dark:text-amber-400 border border-amber-200/50">
+                      Slided from: {student.slideBranch}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Subtitle Details: Rank, Phase, etc */}
@@ -294,9 +301,16 @@ function StudentTable({ students = [], onStatusChange, loading = false, sortConf
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex px-2.5 py-1 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-xs font-bold tracking-wide text-primary-700 dark:text-primary-400">
-                        {student.department || '—'}
-                      </span>
+                      <div className="flex flex-col items-start gap-1.5">
+                        <span className="inline-flex px-2.5 py-1 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-xs font-bold tracking-wide text-primary-700 dark:text-primary-400">
+                          {student.department || '—'}
+                        </span>
+                        {student.slideBranch && (
+                          <span className="inline-flex px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-[10px] font-bold text-amber-600 dark:text-amber-400 border border-amber-200/50">
+                            Slided from: {student.slideBranch}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     {ADMISSION_STEPS.map((step, stepIndex) => {
                       const isChecked = isStepDone(student, step, stepIndex);
